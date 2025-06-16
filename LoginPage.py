@@ -6,7 +6,7 @@ ctk.set_default_color_theme("blue")
 
 # App Setup
 app = ctk.CTk()
-app.geometry("900x600")
+app.geometry("1200x800")
 app.resizable(False, False)  # Make window unresizable
 app.title("Login Page")
 
