@@ -5,9 +5,10 @@ import os
 from tkcalendar import Calendar
 import threading
 import time
-from tkinter import filedialog
+from tkinter import filedialog, messagebox
 from PIL import Image, ImageTk
 import shutil
+from datetime import datetime, timedelta
 
 # ---------- Global Configuration ---------- #
 ctk.set_appearance_mode("Light")
@@ -62,49 +63,81 @@ COLOR_TEXT_PRIMARY = COLOR_ROYAL_BLUE
 COLOR_TEXT_SECONDARY = COLOR_SAPPHIRE
 COLOR_TEXT_MUTED = "#7a7a6b"
 
-# Shadow effects (simulated with frames)
-SHADOW_COLOR = "#00000010"
-
-# ---------- Profile Persistence ---------- #
-PROFILE_DATA_PATH = "user_profile.json"
-
-# ---------- Enhanced Mock Data ---------- #
-PRODUCT_DATA = [
-    {"name": "Premium Widget A", "sku": "WGT-A001", "price": "$25.99", "stock": 120, "trend": "up"},
-    {"name": "Smart Widget B", "sku": "WGT-B002", "price": "$15.49", "stock": 85, "trend": "stable"},
-    {"name": "Ultra Widget C", "sku": "WGT-C003", "price": "$12.99", "stock": 0, "trend": "down"},
-    {"name": "Pro Gadget X", "sku": "GDX-X004", "price": "$45.00", "stock": 42, "trend": "up"},
-    {"name": "Elite Gadget Y", "sku": "GDX-Y005", "price": "$38.75", "stock": 7, "trend": "down"},
-]
-
-MOST_CONSUMED = [
-    ("Cooking Oil", 85, COLOR_PRIMARY),
-    ("Fresh Onions", 78, COLOR_ACCENT_SUCCESS),
-    ("Tomatoes", 72, COLOR_ACCENT_ERROR),
-    ("Garlic Cloves", 68, COLOR_SECONDARY),
-    ("Potatoes", 65, COLOR_ACCENT_WARNING),
-    ("Cane Sugar", 58, COLOR_SECONDARY_DARK),
-    ("All-Purpose Flour", 52, COLOR_GRAY_600),
-    ("Soy Sauce", 48, COLOR_GRAY_700),
-    ("Fresh Ginger", 42, COLOR_GRAY_800)
-]
-
-def load_user_profile_data():
-    if os.path.exists(PROFILE_DATA_PATH):
-        with open(PROFILE_DATA_PATH, "r") as f:
-            return json.load(f)
-    return {
-        "First Name": "Mingyu",
-        "Last Name": "Kim",
-        "Email": "kimmingyu@gmail.com",
-        "Phone Number": "+82 10-1234-5678",
-        "Department": "Inventory Management",
-        "Role": "Owner"
+# Sample inventory data
+INVENTORY_DATA = [
+    {
+        "item_no": "001",
+        "item_name": "Cooking Oil",
+        "image_path": "cooking_oil.png",
+        "quantity": 25,
+        "unit": "Liters",
+        "last_updated": "2025-06-20",
+        "status": "Good",
+        "price": 45.00,
+        "supplier": "Golden Oil Co.",
+        "category": "Oils & Fats"
+    },
+    {
+        "item_no": "002", 
+        "item_name": "Fresh Tomatoes",
+        "image_path": "tomato.png",
+        "quantity": 8,
+        "unit": "kg",
+        "last_updated": "2025-06-19",
+        "status": "Low Stock",
+        "price": 120.00,
+        "supplier": "Fresh Farms",
+        "category": "Vegetables"
+    },
+    {
+        "item_no": "003",
+        "item_name": "Soy Sauce",
+        "image_path": "soy_sauce.png", 
+        "quantity": 0,
+        "unit": "Bottles",
+        "last_updated": "2025-06-18",
+        "status": "Out of Stock",
+        "price": 35.00,
+        "supplier": "Asian Flavors Inc.",
+        "category": "Condiments"
+    },
+    {
+        "item_no": "004",
+        "item_name": "Rice",
+        "image_path": "rice.png",
+        "quantity": 50,
+        "unit": "kg",
+        "last_updated": "2025-06-21",
+        "status": "Good",
+        "price": 85.00,
+        "supplier": "Rice Masters",
+        "category": "Grains"
+    },
+    {
+        "item_no": "005",
+        "item_name": "Garlic",
+        "image_path": "garlic.png",
+        "quantity": 3,
+        "unit": "kg", 
+        "last_updated": "2025-06-20",
+        "status": "Low Stock",
+        "price": 200.00,
+        "supplier": "Spice World",
+        "category": "Spices"
+    },
+    {
+        "item_no": "006",
+        "item_name": "Sugar",
+        "image_path": "sugar.png",
+        "quantity": 12,
+        "unit": "kg",
+        "last_updated": "2025-06-19",
+        "status": "Good",
+        "price": 60.00,
+        "supplier": "Sweet Supply Co.",
+        "category": "Sweeteners"
     }
-
-def save_user_profile_data(data):
-    with open(PROFILE_DATA_PATH, "w") as f:
-        json.dump(data, f, indent=4)
+]
 
 class AnimatedButton(ctk.CTkButton):
     def __init__(self, master, **kwargs):
@@ -115,501 +148,17 @@ class AnimatedButton(ctk.CTkButton):
         
     def on_enter(self, event):
         self.configure(cursor="hand2")
-        # Subtle hover animation
         
     def on_leave(self, event):
         self.configure(cursor="")
 
-class ShadowFrame(ctk.CTkFrame):
-    """Custom frame with shadow effect simulation"""
-    def __init__(self, master, **kwargs):
-        super().__init__(master, **kwargs)
-        
-class EnhancedCard(ctk.CTkFrame):
-    def __init__(self, parent, bg_color, icon_text, value, label_text, trend=None):
-        super().__init__(parent, corner_radius=16, fg_color=COLOR_CARD_BG, border_width=1, border_color=COLOR_GRAY_200)
-        
-        # Hover effect
-        self.bind("<Enter>", self.on_enter)
-        self.bind("<Leave>", self.on_leave)
-        
-        # Icon with colored background
-        icon_frame = ctk.CTkFrame(self, fg_color=bg_color, corner_radius=12, width=60, height=60)
-        icon_frame.pack(pady=(20, 10))
-        icon_frame.pack_propagate(False)
-        
-        icon_label = ctk.CTkLabel(icon_frame, text=icon_text, font=("Segoe UI", 24), text_color=COLOR_WHITE)
-        icon_label.pack(expand=True)
-        
-        # Value with animation placeholder
-        self.value_label = ctk.CTkLabel(self, text="0", font=FONT_CARD_VALUE, text_color=COLOR_TEXT_PRIMARY)
-        self.value_label.pack(pady=(0, 5))
-        
-        # Label
-        label = ctk.CTkLabel(self, text=label_text, font=FONT_BODY, text_color=COLOR_TEXT_MUTED)
-        label.pack(pady=(0, 20))
-        
-        # Trend indicator
-        if trend:
-            trend_frame = ctk.CTkFrame(self, fg_color="transparent")
-            trend_frame.pack(pady=(0, 15))
-            
-            trend_color = COLOR_ACCENT_SUCCESS if trend == "up" else COLOR_ACCENT_ERROR if trend == "down" else COLOR_TEXT_MUTED
-            trend_icon = "↗" if trend == "up" else "↘" if trend == "down" else "→"
-            
-            trend_label = ctk.CTkLabel(trend_frame, text=f"{trend_icon} {trend.title()}", 
-                                     font=FONT_SMALL, text_color=trend_color)
-            trend_label.pack()
-        
-        # Animate the value
-        self.animate_value(value)
-        
-    def animate_value(self, target_value):
-        """Animate the counter from 0 to target value"""
-        def animate():
-            current = 0
-            target = int(target_value.replace(',', ''))
-            step = max(1, target // 30)  # 30 frames for smooth animation
-            
-            while current < target:
-                current = min(current + step, target)
-                formatted_value = f"{current:,}" if current >= 1000 else str(current)
-                self.value_label.configure(text=formatted_value)
-                time.sleep(0.03)
-        
-        threading.Thread(target=animate, daemon=True).start()
-        
-    def on_enter(self, event):
-        self.configure(border_width=2, border_color=COLOR_PRIMARY)
-        
-    def on_leave(self, event):
-        self.configure(border_width=1, border_color=COLOR_GRAY_200)
-
-class UserProfilePopup(ctk.CTkToplevel):
-    
-    def __init__(self, master, **kwargs):
-        super().__init__(master, **kwargs)
-        self.edit_mode = False
-        self.master = master
-        self.setup_window()
-        self.setup_ui()
-        
-        # Center the popup on the parent window
-        self.center_on_parent()
-        
-        # Make the popup modal
-        self.transient(master)
-        self.grab_set()
-        
-        # Handle window close
-        self.protocol("WM_DELETE_WINDOW", self.on_close)
-
-    def setup_window(self):
-        self.title("User Profile")
-        self.geometry("500x650")
-        self.resizable(False, False)
-        self.configure(fg_color=COLOR_MAIN_BG)
-        
-        # Remove window decorations for a more modern look (optional)
-        # self.overrideredirect(True)
-
-    def center_on_parent(self):
-        """Center the popup window on the parent window"""
-        self.update_idletasks()
-        
-        # Get parent window geometry
-        parent_x = self.master.winfo_x()
-        parent_y = self.master.winfo_y()
-        parent_width = self.master.winfo_width()
-        parent_height = self.master.winfo_height()
-        
-        # Calculate center position
-        popup_width = 500
-        popup_height = 650
-        x = parent_x + (parent_width - popup_width) // 2
-        y = parent_y + (parent_height - popup_height) // 2
-        
-        self.geometry(f"{popup_width}x{popup_height}+{x}+{y}")
-
-    def setup_ui(self):
-        # Main container with modern styling
-        main_container = ctk.CTkFrame(self, fg_color=COLOR_CARD_BG, corner_radius=20, 
-                                    border_width=2, border_color=COLOR_GRAY_200)
-        main_container.pack(fill="both", expand=True, padx=20, pady=20)
-        
-        # Header with close button
-        header_frame = ctk.CTkFrame(main_container, fg_color="transparent", height=60)
-        header_frame.pack(fill="x", padx=25, pady=(20, 0))
-        header_frame.pack_propagate(False)
-
-        title_label = ctk.CTkLabel(header_frame, text="👤 User Profile", font=FONT_H2, text_color=COLOR_TEXT_PRIMARY)
-        title_label.pack(side="left", pady=15)
-
-        # Close button
-        close_btn = AnimatedButton(header_frame, text="✕", font=("Segoe UI", 16, "bold"),
-                                 fg_color=COLOR_ACCENT_ERROR, hover_color="#5a1e1e",
-                                 text_color=COLOR_WHITE, corner_radius=15, width=30, height=30,
-                                 command=self.on_close)
-        close_btn.pack(side="right", pady=15)
-
-        # Edit button
-        self.edit_btn = AnimatedButton(header_frame, text="✏ Edit", command=self.toggle_edit,
-                                     fg_color=COLOR_PRIMARY, hover_color=COLOR_PRIMARY_HOVER,
-                                     text_color=COLOR_WHITE, corner_radius=8, height=36)
-        self.edit_btn.pack(side="right", padx=(0, 10), pady=15)
-
-        # Content area
-        content_frame = ctk.CTkScrollableFrame(main_container, fg_color="transparent")
-        content_frame.pack(fill="both", expand=True, padx=25, pady=20)
-
-        # Profile image section
-        self.setup_profile_image_section(content_frame)
-
-        # Profile form
-        self.entries = {}
-        self.profile_data = load_user_profile_data()
-
-        # Form fields with enhanced styling
-        for i, (label_text, default_value) in enumerate(self.profile_data.items()):
-            # Skip Photo Path field in the form
-            if label_text == "Photo Path":
-                continue
-                
-            # Field container
-            field_frame = ctk.CTkFrame(content_frame, fg_color="transparent", height=80)
-            field_frame.pack(fill="x", pady=10)
-            field_frame.pack_propagate(False)
-            
-            # Label
-            label = ctk.CTkLabel(field_frame, text=label_text, font=FONT_H3, text_color=COLOR_TEXT_SECONDARY)
-            label.pack(anchor="w", pady=(0, 5))
-            
-            # Entry with modern styling
-            entry = ctk.CTkEntry(field_frame, placeholder_text=f"Enter {label_text.lower()}",
-                               font=FONT_BODY, text_color=COLOR_TEXT_PRIMARY, height=45,
-                               fg_color=COLOR_GRAY_50, border_color=COLOR_GRAY_300,
-                               corner_radius=10)
-            entry.insert(0, default_value)
-            entry.configure(state="readonly")
-            entry.pack(fill="x", pady=(0, 5))
-            self.entries[label_text] = entry
-
-        # Action buttons
-        button_frame = ctk.CTkFrame(main_container, fg_color="transparent", height=60)
-        button_frame.pack(fill="x", padx=25, pady=(0, 20))
-        button_frame.pack_propagate(False)
-
-        # Save and Cancel buttons (initially hidden)
-        self.save_btn = AnimatedButton(button_frame, text="💾 Save Changes", 
-                                     fg_color=COLOR_ACCENT_SUCCESS, hover_color="#1f3d1b",
-                                     text_color=COLOR_WHITE, corner_radius=10, height=45,
-                                     command=self.save_changes)
-        
-        self.cancel_btn = AnimatedButton(button_frame, text="❌ Cancel", 
-                                       fg_color=COLOR_GRAY_600, hover_color=COLOR_GRAY_700,
-                                       text_color=COLOR_WHITE, corner_radius=10, height=45,
-                                       command=self.cancel_changes)
-
-    def setup_profile_image_section(self, content_frame):
-        """Setup the profile image section with upload functionality"""
-        # Profile image section
-        profile_section = ctk.CTkFrame(content_frame, fg_color="transparent", height=140)
-        profile_section.pack(fill="x", pady=(0, 20))
-        profile_section.pack_propagate(False)
-        
-        profile_frame = ctk.CTkFrame(profile_section, fg_color=COLOR_PRIMARY, corner_radius=60, 
-                                   width=120, height=120)
-        profile_frame.pack()
-        profile_frame.pack_propagate(False)
-        
-        # Check if user has a profile photo
-        photo_path = self.profile_data.get("Photo Path", "") if hasattr(self, 'profile_data') else ""
-        if photo_path and os.path.exists(photo_path):
-            try:
-                image = Image.open(photo_path)
-                image = image.resize((100, 100), Image.Resampling.LANCZOS)
-                photo = ImageTk.PhotoImage(image)
-                
-                self.profile_icon = ctk.CTkLabel(profile_frame, image=photo, text="")
-                self.profile_icon.image = photo  # Keep a reference
-            except:
-                # Fallback to default icon
-                self.profile_icon = ctk.CTkLabel(profile_frame, text="👤", font=("Segoe UI", 48), text_color=COLOR_WHITE)
-        else:
-            self.profile_icon = ctk.CTkLabel(profile_frame, text="👤", font=("Segoe UI", 48), text_color=COLOR_WHITE)
-        
-        self.profile_icon.pack(expand=True)
-        
-        # Upload button (initially hidden)
-        self.upload_btn = AnimatedButton(profile_section, text="📷 Upload Photo", 
-                                       fg_color=COLOR_SECONDARY, hover_color=COLOR_SECONDARY_DARK,
-                                       text_color=COLOR_WHITE, corner_radius=8, height=30,
-                                       font=FONT_SMALL, command=self.upload_photo)
-        # Don't pack initially - will be shown in edit mode
-
-    def upload_photo(self):
-        """Handle photo upload functionality"""
-        file_path = filedialog.askopenfilename(
-            title="Select Profile Photo",
-            filetypes=[
-                ("Image files", "*.png *.jpg *.jpeg *.gif *.bmp"),
-                ("PNG files", "*.png"),
-                ("JPEG files", "*.jpg *.jpeg"),
-                ("All files", "*.*")
-            ]
-        )
-        
-        if file_path:
-            try:
-                # Create a directory for profile photos if it doesn't exist
-                if not os.path.exists("profile_photos"):
-                    os.makedirs("profile_photos")
-                
-                # Copy the image to our profile photos directory
-                file_extension = os.path.splitext(file_path)[1]
-                new_filename = f"profile_{self.profile_data.get('First Name', 'user').lower()}{file_extension}"
-                new_path = os.path.join("profile_photos", new_filename)
-                
-                # Copy and resize the image
-                image = Image.open(file_path)
-                # Resize to a reasonable size (120x120 for profile)
-                image = image.resize((120, 120), Image.Resampling.LANCZOS)
-                image.save(new_path)
-                
-                # Update profile data with photo path
-                self.profile_data["Photo Path"] = new_path
-                
-                # Update the profile image display
-                self.update_profile_image(new_path)
-                
-                print(f"Profile photo uploaded successfully: {new_path}")
-                
-            except Exception as e:
-                print(f"Error uploading photo: {e}")
-
-    def update_profile_image(self, image_path):
-        """Update the profile image display"""
-        try:
-            # Load and display the new image
-            image = Image.open(image_path)
-            image = image.resize((100, 100), Image.Resampling.LANCZOS)
-            
-            # Convert to PhotoImage
-            photo = ImageTk.PhotoImage(image)
-            
-            # Update the profile icon
-            self.profile_icon.configure(image=photo, text="")
-            self.profile_icon.image = photo  # Keep a reference
-            
-        except Exception as e:
-            print(f"Error updating profile image: {e}")
-
-    def toggle_edit(self):
-        self.edit_mode = not self.edit_mode
-        new_state = "normal" if self.edit_mode else "readonly"
-
-        for entry in self.entries.values():
-            entry.configure(state=new_state)
-            if self.edit_mode:
-                entry.configure(border_color=COLOR_PRIMARY, border_width=2)
-            else:
-                entry.configure(border_color=COLOR_GRAY_300, border_width=1)
-
-        # Update UI based on edit mode
-        if self.edit_mode:
-            self.edit_btn.configure(text="❌ Cancel Edit")
-            self.save_btn.pack(side="left", expand=True, fill="x", padx=(0, 10))
-            self.cancel_btn.pack(side="right", expand=True, fill="x", padx=(10, 0))
-            # Show upload button in edit mode
-            if hasattr(self, 'upload_btn'):
-                self.upload_btn.pack(pady=(5, 0))
-        else:
-            self.edit_btn.configure(text="✏ Edit")
-            self.save_btn.pack_forget()
-            self.cancel_btn.pack_forget()
-            # Hide upload button when not editing
-            if hasattr(self, 'upload_btn'):
-                self.upload_btn.pack_forget()
-
-    def save_changes(self):
-        """Save the profile changes"""
-        updated_data = {label: entry.get() for label, entry in self.entries.items()}
-        # Keep the photo path if it exists
-        if "Photo Path" in self.profile_data:
-            updated_data["Photo Path"] = self.profile_data["Photo Path"]
-        
-        self.profile_data.update(updated_data)
-        save_user_profile_data(self.profile_data)
-        
-        # Exit edit mode
-        self.edit_mode = False
-        self.toggle_edit()
-        
-        # Show success message (you could add a toast notification here)
-        print("Profile updated successfully!")
-
-    def cancel_changes(self):
-        """Cancel changes and restore original values"""
-        for label, entry in self.entries.items():
-            entry.delete(0, 'end')
-            entry.insert(0, self.profile_data[label])
-        
-        # Exit edit mode
-        self.edit_mode = False
-        self.toggle_edit()
-
-    def on_close(self):
-        """Handle window close event"""
-        if self.edit_mode:
-            # If in edit mode, ask for confirmation or auto-cancel
-            self.cancel_changes()
-        
-        self.grab_release()
-        self.destroy()
-
-class NotificationPopup(ctk.CTkToplevel):
-    def __init__(self, master, **kwargs):
-        super().__init__(master, **kwargs)
-        self.master = master
-        self.setup_window()
-        self.setup_ui()
-        
-        # Center the popup on the parent window
-        self.center_on_parent()
-        
-        # Make the popup modal
-        self.transient(master)
-        self.grab_set()
-        
-        # Handle window close
-        self.protocol("WM_DELETE_WINDOW", self.on_close)
-
-    def setup_window(self):
-        self.title("Notifications")
-        self.geometry("550x400")
-        self.resizable(False, False)
-        self.configure(fg_color=COLOR_MAIN_BG)
-
-    def center_on_parent(self):
-        """Center the popup window on the parent window"""
-        self.update_idletasks()
-        
-        # Get parent window geometry
-        parent_x = self.master.winfo_x()
-        parent_y = self.master.winfo_y()
-        parent_width = self.master.winfo_width()
-        parent_height = self.master.winfo_height()
-        
-        # Calculate center position
-        popup_width = 550
-        popup_height = 400
-        x = parent_x + (parent_width - popup_width) // 2
-        y = parent_y + (parent_height - popup_height) // 2
-        
-        self.geometry(f"{popup_width}x{popup_height}+{x}+{y}")
-
-    def setup_ui(self):
-        # Main container
-        main_container = ctk.CTkFrame(self, fg_color=COLOR_WHITE, corner_radius=20, 
-                                    border_width=2, border_color=COLOR_GRAY_200)
-        main_container.pack(fill="both", expand=True, padx=20, pady=20)
-        
-        # Header with close button
-        header_frame = ctk.CTkFrame(main_container, fg_color="transparent", height=60)
-        header_frame.pack(fill="x", padx=25, pady=(20, 0))
-        header_frame.pack_propagate(False)
-
-        title_label = ctk.CTkLabel(header_frame, text="Notifications", font=FONT_H2, text_color=COLOR_TEXT_PRIMARY)
-        title_label.pack(side="left", pady=15)
-
-        # Close button
-        close_btn = AnimatedButton(header_frame, text="✕", font=("Segoe UI", 16, "bold"),
-                                 fg_color="transparent", hover_color=COLOR_GRAY_100,
-                                 text_color=COLOR_GRAY_600, corner_radius=15, width=30, height=30,
-                                 command=self.on_close)
-        close_btn.pack(side="right", pady=15)
-
-        # Notifications list
-        notifications_frame = ctk.CTkScrollableFrame(main_container, fg_color="transparent")
-        notifications_frame.pack(fill="both", expand=True, padx=25, pady=(0, 20))
-
-        # Sample notifications data
-        notifications = [
-            {
-                "type": "error",
-                "icon": "⚠️",
-                "title": "Ketchup is currently out of stock.",
-                "date": "May 23, 2025",
-                "bg_color": "#fff5f5",
-                "border_color": "#fed7d7"
-            },
-            {
-                "type": "warning", 
-                "icon": "⚠️",
-                "title": "Soy Sauce is running low on stocks.\nOnly 4 remaining.",
-                "date": "May 23, 2025",
-                "bg_color": "#fffbeb",
-                "border_color": "#fed7aa"
-            },
-            {
-                "type": "warning",
-                "icon": "⚠️", 
-                "title": "Fish Sauce is running low on stocks.\nOnly 2 remaining.",
-                "date": "May 23, 2025",
-                "bg_color": "#fffbeb",
-                "border_color": "#fed7aa"
-            },
-            {
-                "type": "info",
-                "icon": "🕐",
-                "title": "Sugar is nearing its expiry date.\nExpiry: May 31, 2025.",
-                "date": "May 23, 2025", 
-                "bg_color": "#fef2f2",
-                "border_color": "#fecaca"
-            }
-        ]
-
-        for notification in notifications:
-            self.create_notification_item(notifications_frame, notification)
-
-    def create_notification_item(self, parent, notification):
-        # Notification item container
-        item_frame = ctk.CTkFrame(parent, fg_color=notification["bg_color"], 
-                                corner_radius=8, border_width=1, border_color=notification["border_color"])
-        item_frame.pack(fill="x", pady=5)
-
-        # Content frame
-        content_frame = ctk.CTkFrame(item_frame, fg_color="transparent")
-        content_frame.pack(fill="x", padx=15, pady=12)
-
-        # Icon and content
-        icon_label = ctk.CTkLabel(content_frame, text=notification["icon"], font=("Segoe UI", 18))
-        icon_label.pack(side="left", padx=(0, 12))
-
-        # Text content
-        text_frame = ctk.CTkFrame(content_frame, fg_color="transparent")
-        text_frame.pack(side="left", expand=True, fill="x")
-
-        title_label = ctk.CTkLabel(text_frame, text=notification["title"], 
-                                 font=FONT_BODY, text_color=COLOR_TEXT_PRIMARY, 
-                                 anchor="w", justify="left")
-        title_label.pack(anchor="w")
-
-        # Date
-        date_label = ctk.CTkLabel(content_frame, text=notification["date"], 
-                                font=FONT_SMALL, text_color=COLOR_TEXT_MUTED)
-        date_label.pack(side="right")
-
-    def on_close(self):
-        """Handle window close event"""
-        self.grab_release()
-        self.destroy()
-
 class ModernSidebar(ctk.CTkFrame):
-    def __init__(self, master, **kwargs):
+    def __init__(self, master, main_app, **kwargs):
         super().__init__(master, width=280, fg_color=COLOR_SAPPHIRE, corner_radius=0, **kwargs)
         self.pack_propagate(False)
+        self.main_app = main_app
         self.active_button = None
+        self.nav_buttons = {}
         self.setup_ui()
         
     def setup_ui(self):
@@ -624,23 +173,27 @@ class ModernSidebar(ctk.CTkFrame):
         logo_label = ctk.CTkLabel(logo_frame, text="StockSmart", font=FONT_H1, text_color=COLOR_ROYAL_BLUE)
         logo_label.pack(pady=(5, 0))
         
-        subtitle = ctk.CTkLabel(logo_frame, text="Dashboard", font=FONT_SMALL, text_color=COLOR_ROYAL_BLUE)
+        subtitle = ctk.CTkLabel(logo_frame, text="Inventory Management", font=FONT_SMALL, text_color=COLOR_ROYAL_BLUE)
         subtitle.pack()
 
         # Navigation with modern design
         nav_frame = ctk.CTkFrame(self, fg_color="transparent")
         nav_frame.pack(fill="x", padx=20)
 
-        nav_buttons = [
-            ("Dashboard", "🏠", True),
-            ("Inventory", "📦", False),
-            ("Items", "🏷️", False),
-            ("History Logs", "📋", False)
+        nav_items = [
+            ("Dashboard", "🏠"),
+            ("Inventory", "📦"),
+            ("Items", "🏷️"),
+            ("History Logs", "📋")
         ]
 
-        for name, icon, is_active in nav_buttons:
-            btn = self.create_nav_button(nav_frame, name, icon, is_active)
+        for name, icon in nav_items:
+            btn = self.create_nav_button(nav_frame, name, icon)
             btn.pack(fill="x", pady=5)
+            self.nav_buttons[name] = btn
+            
+        # Set initial active page
+        self.set_active("Dashboard")
             
         # User section at bottom
         user_frame = ctk.CTkFrame(self, fg_color=COLOR_SECONDARY_DARK, corner_radius=12, height=80)
@@ -651,72 +204,430 @@ class ModernSidebar(ctk.CTkFrame):
                                font=FONT_SMALL, text_color=COLOR_WHITE, justify="left")
         user_info.pack(expand=True, padx=15)
 
-    def create_nav_button(self, parent, name, icon, is_active=False):
-        fg_color = COLOR_SECONDARY_DARK if is_active else "transparent"
-        text_color = COLOR_ROYAL_BLUE if is_active else COLOR_ROYAL_BLUE
-        hover_color = COLOR_SECONDARY_LIGHT if not is_active else COLOR_SECONDARY_DARK
-        
+    def create_nav_button(self, parent, name, icon):
         btn = ctk.CTkButton(parent, text=f"{icon}  {name}", font=FONT_BUTTON,
-                           text_color=text_color, fg_color=fg_color,
-                           hover_color=hover_color, corner_radius=10, height=50,
+                           text_color=COLOR_ROYAL_BLUE, fg_color="transparent",
+                           hover_color=COLOR_SECONDARY_LIGHT, corner_radius=10, height=50,
                            anchor="w", command=lambda n=name: self.set_active(n))
-        
-        if is_active:
-            self.active_button = btn
-            
         return btn
         
     def set_active(self, name):
-        print(f"{name} clicked")
-        # Reset all buttons and set new active
+        # Reset all buttons
+        for btn_name, btn in self.nav_buttons.items():
+            if btn_name == name:
+                btn.configure(fg_color=COLOR_SECONDARY_DARK, text_color=COLOR_WHITE)
+                self.active_button = btn
+            else:
+                btn.configure(fg_color="transparent", text_color=COLOR_ROYAL_BLUE)
+        
+        # Switch page in main app
+        self.main_app.switch_page(name)
 
-class App(ctk.CTk):
-    def __init__(self):
-        super().__init__()
-        self.title("StockSmart Dashboard - Enhanced")
-        self.geometry("1200x800")
-        self.minsize(1000, 700)
-        self.configure(bg=COLOR_MAIN_BG)
-
-        self.profile_popup = None
-        self.notification_popup = None
+class DashboardPage(ctk.CTkFrame):
+    def __init__(self, master, **kwargs):
+        super().__init__(master, **kwargs)
         self.setup_ui()
-
+        
     def setup_ui(self):
-        # Modern sidebar
-        self.sidebar = ModernSidebar(self)
-        self.sidebar.pack(side="left", fill="y")
-
-        # Main content area
-        self.main_frame = ctk.CTkScrollableFrame(self, fg_color=COLOR_MAIN_BG, corner_radius=0)
-        self.main_frame.pack(side="left", fill="both", expand=True)
-
-        self.build_top_bar()
-        self.build_overview_section()
-        self.build_analytics_section()
-
-    def build_top_bar(self):
-        top_bar = ctk.CTkFrame(self.main_frame, fg_color="transparent", height=80)
-        top_bar.pack(fill="x", padx=30, pady=(20, 0))
-        top_bar.pack_propagate(False)
-
-        # Welcome section
-        welcome_frame = ctk.CTkFrame(top_bar, fg_color="transparent")
-        welcome_frame.pack(side="left", expand=True, fill="both")
+        self.configure(fg_color=COLOR_MAIN_BG, corner_radius=0)
         
-        welcome_label = ctk.CTkLabel(welcome_frame, text="Good morning, Mingyu! 👋", 
-                                   font=FONT_H1, text_color=COLOR_TEXT_PRIMARY)
-        welcome_label.pack(anchor="w", pady=(10, 0))
+        # Header
+        self.build_header()
         
-        subtitle = ctk.CTkLabel(welcome_frame, text="Here's what's happening with your inventory today", 
+        # Main content with scrollable frame
+        main_content = ctk.CTkScrollableFrame(self, fg_color="transparent")
+        main_content.pack(fill="both", expand=True, padx=30, pady=20)
+        
+        # Statistics Cards
+        self.build_stats_cards(main_content)
+        
+        # Charts Section
+        self.build_charts_section(main_content)
+        
+        # Recent Activity
+        self.build_recent_activity(main_content)
+
+    def build_header(self):
+        header_frame = ctk.CTkFrame(self, fg_color="transparent", height=80)
+        header_frame.pack(fill="x", padx=30, pady=(20, 0))
+        header_frame.pack_propagate(False)
+
+        # Title section
+        title_frame = ctk.CTkFrame(header_frame, fg_color="transparent")
+        title_frame.pack(side="left", expand=True, fill="both")
+        
+        title_label = ctk.CTkLabel(title_frame, text="🏠 Dashboard", 
+                                 font=FONT_H1, text_color=COLOR_TEXT_PRIMARY)
+        title_label.pack(anchor="w", pady=(15, 0))
+        
+        current_date = datetime.now().strftime("%B %d, %Y")
+        subtitle = ctk.CTkLabel(title_frame, text=f"Welcome back, Mingyu! Today is {current_date}", 
                               font=FONT_BODY, text_color=COLOR_TEXT_MUTED)
         subtitle.pack(anchor="w")
 
         # Actions section
-        actions_frame = ctk.CTkFrame(top_bar, fg_color="transparent")
+        actions_frame = ctk.CTkFrame(header_frame, fg_color="transparent")
         actions_frame.pack(side="right")
 
-        # Notification bell with badge
+        # Quick Add Button
+        add_btn = AnimatedButton(
+            actions_frame,
+            text="➕ Add Item",
+            font=FONT_BUTTON,
+            fg_color=COLOR_PRIMARY,
+            hover_color=COLOR_PRIMARY_HOVER,
+            corner_radius=8,
+            height=40,
+            command=self.quick_add_item
+        )
+        add_btn.pack(side="left", padx=10)
+
+        # User dropdown
+        user_btn = AnimatedButton(actions_frame, text="👤 Mingyu Kim ▼", font=FONT_BODY,
+                                text_color=COLOR_TEXT_SECONDARY, fg_color=COLOR_CARD_BG,
+                                hover_color=COLOR_SIDEBAR_ACTIVE, corner_radius=8, height=40,
+                                command=self.show_user_menu)
+        user_btn.pack(side="left", padx=10)
+
+    def build_stats_cards(self, parent):
+        stats_frame = ctk.CTkFrame(parent, fg_color="transparent")
+        stats_frame.pack(fill="x", pady=(0, 20))
+        
+        # Calculate statistics
+        total_items = len(INVENTORY_DATA)
+        low_stock = len([item for item in INVENTORY_DATA if item["status"] == "Low Stock"])
+        out_of_stock = len([item for item in INVENTORY_DATA if item["status"] == "Out of Stock"])
+        total_value = sum(item["quantity"] * item["price"] for item in INVENTORY_DATA)
+        
+        stats_data = [
+            ("Total Items", str(total_items), "📦", COLOR_PRIMARY),
+            ("Low Stock", str(low_stock), "⚠️", COLOR_ACCENT_WARNING),
+            ("Out of Stock", str(out_of_stock), "🚫", COLOR_ACCENT_ERROR),
+            ("Total Value", f"₱{total_value:,.2f}", "💰", COLOR_ACCENT_SUCCESS)
+        ]
+        
+        for i, (title, value, icon, color) in enumerate(stats_data):
+            card = self.create_stat_card(stats_frame, title, value, icon, color)
+            card.grid(row=0, column=i, padx=10, sticky="ew")
+            stats_frame.grid_columnconfigure(i, weight=1)
+
+    def create_stat_card(self, parent, title, value, icon, color):
+        card = ctk.CTkFrame(parent, fg_color=COLOR_CARD_BG, corner_radius=12, height=120)
+        card.grid_propagate(False)
+        
+        # Icon
+        icon_label = ctk.CTkLabel(card, text=icon, font=("Segoe UI", 24))
+        icon_label.pack(pady=(15, 5))
+        
+        # Value
+        value_label = ctk.CTkLabel(card, text=value, font=FONT_CARD_VALUE, text_color=color)
+        value_label.pack()
+        
+        # Title
+        title_label = ctk.CTkLabel(card, text=title, font=FONT_SMALL, text_color=COLOR_TEXT_MUTED)
+        title_label.pack(pady=(0, 15))
+        
+        return card
+
+    def build_charts_section(self, parent):
+        charts_frame = ctk.CTkFrame(parent, fg_color="transparent")
+        charts_frame.pack(fill="x", pady=(0, 20))
+        
+        # Mock chart - Inventory by Category
+        chart_card = ctk.CTkFrame(charts_frame, fg_color=COLOR_CARD_BG, corner_radius=12)
+        chart_card.pack(fill="x", pady=10)
+        
+        chart_title = ctk.CTkLabel(chart_card, text="📊 Inventory by Category", 
+                                 font=FONT_H3, text_color=COLOR_TEXT_PRIMARY)
+        chart_title.pack(pady=(20, 10))
+        
+        # Simple text-based chart representation
+        categories = {}
+        for item in INVENTORY_DATA:
+            cat = item.get("category", "Other")
+            categories[cat] = categories.get(cat, 0) + 1
+        
+        for category, count in categories.items():
+            cat_frame = ctk.CTkFrame(chart_card, fg_color="transparent")
+            cat_frame.pack(fill="x", padx=20, pady=5)
+            
+            cat_label = ctk.CTkLabel(cat_frame, text=f"{category}: {count} items", 
+                                   font=FONT_BODY, text_color=COLOR_TEXT_PRIMARY)
+            cat_label.pack(side="left")
+            
+            # Progress bar representation
+            progress = ctk.CTkProgressBar(cat_frame, width=200, height=10)
+            progress.pack(side="right", padx=(10, 0))
+            progress.set(count / total_items if total_items > 0 else 0)
+        
+        # Add some padding at bottom
+        ctk.CTkLabel(chart_card, text="", height=20).pack()
+
+    def build_recent_activity(self, parent):
+        activity_frame = ctk.CTkFrame(parent, fg_color=COLOR_CARD_BG, corner_radius=12)
+        activity_frame.pack(fill="x", pady=10)
+        
+        activity_title = ctk.CTkLabel(activity_frame, text="📋 Recent Activity", 
+                                    font=FONT_H3, text_color=COLOR_TEXT_PRIMARY)
+        activity_title.pack(pady=(20, 10))
+        
+        # Sample recent activities
+        recent_activities = [
+            ("➕", "Added 9 stocks of Cooking Oil", "10 mins ago"),
+            ("➖", "Deducted 3 stocks of Fresh Onions", "25 mins ago"),
+            ("✏️", "Updated price of Tomatoes", "1 hour ago"),
+            ("🆕", "Added Organic Quinoa to inventory", "2 hours ago")
+        ]
+        
+        for icon, description, time in recent_activities:
+            activity_item = ctk.CTkFrame(activity_frame, fg_color="transparent")
+            activity_item.pack(fill="x", padx=20, pady=5)
+            
+            icon_label = ctk.CTkLabel(activity_item, text=icon, font=("Segoe UI", 16))
+            icon_label.pack(side="left", padx=(0, 10))
+            
+            desc_label = ctk.CTkLabel(activity_item, text=description, 
+                                    font=FONT_BODY, text_color=COLOR_TEXT_PRIMARY)
+            desc_label.pack(side="left")
+            
+            time_label = ctk.CTkLabel(activity_item, text=time, 
+                                    font=FONT_SMALL, text_color=COLOR_TEXT_MUTED)
+            time_label.pack(side="right")
+        
+        # Add some padding at bottom
+        ctk.CTkLabel(activity_frame, text="", height=20).pack()
+
+    def quick_add_item(self):
+        messagebox.showinfo("Quick Add", "Quick Add Item feature coming soon!")
+
+    def show_user_menu(self):
+        messagebox.showinfo("User Menu", "User menu options coming soon!")
+
+class ItemsPage(ctk.CTkFrame):
+    def __init__(self, master, **kwargs):
+        super().__init__(master, **kwargs)
+        self.setup_ui()
+
+    def setup_ui(self):
+        self.configure(fg_color=COLOR_MAIN_BG, corner_radius=0)
+        
+        # Header
+        self.build_header()
+        
+        # Main content
+        main_content = ctk.CTkScrollableFrame(self, fg_color="transparent")
+        main_content.pack(fill="both", expand=True, padx=30, pady=20)
+        
+        # Items grid
+        self.build_items_grid(main_content)
+
+    def build_header(self):
+        header_frame = ctk.CTkFrame(self, fg_color="transparent", height=80)
+        header_frame.pack(fill="x", padx=30, pady=(20, 0))
+        header_frame.pack_propagate(False)
+
+        # Title section
+        title_frame = ctk.CTkFrame(header_frame, fg_color="transparent")
+        title_frame.pack(side="left", expand=True, fill="both")
+        
+        title_label = ctk.CTkLabel(title_frame, text="🏷️ Items", 
+                                 font=FONT_H1, text_color=COLOR_TEXT_PRIMARY)
+        title_label.pack(anchor="w", pady=(15, 0))
+        
+        subtitle = ctk.CTkLabel(title_frame, text="Manage individual items and their details", 
+                              font=FONT_BODY, text_color=COLOR_TEXT_MUTED)
+        subtitle.pack(anchor="w")
+
+        # Actions section
+        actions_frame = ctk.CTkFrame(header_frame, fg_color="transparent")
+        actions_frame.pack(side="right")
+
+        # Add New Item Button
+        add_btn = AnimatedButton(
+            actions_frame,
+            text="➕ Add New Item",
+            font=FONT_BUTTON,
+            fg_color=COLOR_PRIMARY,
+            hover_color=COLOR_PRIMARY_HOVER,
+            corner_radius=8,
+            height=40,
+            command=self.add_new_item
+        )
+        add_btn.pack(side="left", padx=10)
+
+        # User dropdown
+        user_btn = AnimatedButton(actions_frame, text="👤 Mingyu Kim ▼", font=FONT_BODY,
+                                text_color=COLOR_TEXT_SECONDARY, fg_color=COLOR_CARD_BG,
+                                hover_color=COLOR_SIDEBAR_ACTIVE, corner_radius=8, height=40,
+                                command=self.show_user_menu)
+        user_btn.pack(side="left", padx=10)
+
+    def build_items_grid(self, parent):
+        # Grid container
+        grid_frame = ctk.CTkFrame(parent, fg_color="transparent")
+        grid_frame.pack(fill="both", expand=True)
+        
+        # Configure grid columns
+        for i in range(3):  # 3 columns
+            grid_frame.grid_columnconfigure(i, weight=1)
+        
+        # Create item cards
+        for i, item in enumerate(INVENTORY_DATA):
+            row = i // 3
+            col = i % 3
+            
+            item_card = self.create_item_card(grid_frame, item)
+            item_card.grid(row=row, column=col, padx=10, pady=10, sticky="nsew")
+
+    def create_item_card(self, parent, item):
+        card = ctk.CTkFrame(parent, fg_color=COLOR_CARD_BG, corner_radius=12)
+        
+        # Item emoji/icon
+        emoji_map = {
+            "Cooking Oil": "🛢️",
+            "Fresh Tomatoes": "🍅", 
+            "Soy Sauce": "🍶",
+            "Rice": "🌾",
+            "Garlic": "🧄",
+            "Sugar": "🧂"
+        }
+        item_emoji = emoji_map.get(item["item_name"], "📦")
+        
+        # Icon
+        icon_frame = ctk.CTkFrame(card, fg_color=COLOR_PRIMARY, corner_radius=50, width=80, height=80)
+        icon_frame.pack(pady=(20, 10))
+        icon_frame.pack_propagate(False)
+        
+        icon_label = ctk.CTkLabel(icon_frame, text=item_emoji, font=("Segoe UI", 32))
+        icon_label.pack(expand=True)
+        
+        # Item name
+        name_label = ctk.CTkLabel(card, text=item["item_name"], 
+                                font=FONT_H3, text_color=COLOR_TEXT_PRIMARY)
+        name_label.pack(pady=(0, 5))
+        
+        # Item details
+        details_frame = ctk.CTkFrame(card, fg_color="transparent")
+        details_frame.pack(fill="x", padx=20, pady=10)
+        
+        # Quantity
+        qty_label = ctk.CTkLabel(details_frame, text=f"Qty: {item['quantity']} {item['unit']}", 
+                               font=FONT_BODY, text_color=COLOR_TEXT_SECONDARY)
+        qty_label.pack()
+        
+        # Price
+        price_label = ctk.CTkLabel(details_frame, text=f"₱{item['price']:.2f}", 
+                                 font=FONT_BODY, text_color=COLOR_TEXT_SECONDARY)
+        price_label.pack()
+        
+        # Status
+        status_colors = {
+            "Good": COLOR_ACCENT_SUCCESS,
+            "Low Stock": COLOR_ACCENT_WARNING,
+            "Out of Stock": COLOR_ACCENT_ERROR
+        }
+        
+        status_label = ctk.CTkLabel(details_frame, text=item["status"], 
+                                  font=ctk.CTkFont(weight="bold", size=12),
+                                  text_color=status_colors.get(item["status"], COLOR_TEXT_PRIMARY))
+        status_label.pack(pady=(5, 0))
+        
+        # Action buttons
+        button_frame = ctk.CTkFrame(card, fg_color="transparent")
+        button_frame.pack(fill="x", padx=20, pady=(10, 20))
+        
+        edit_btn = AnimatedButton(button_frame, text="Edit", font=FONT_SMALL,
+                                fg_color=COLOR_SECONDARY, hover_color=COLOR_SECONDARY_DARK,
+                                corner_radius=6, height=30,
+                                command=lambda: self.edit_item(item))
+        edit_btn.pack(side="left", padx=(0, 5), fill="x", expand=True)
+        
+        delete_btn = AnimatedButton(button_frame, text="Delete", font=FONT_SMALL,
+                                  fg_color=COLOR_ACCENT_ERROR, hover_color="#5a1f1f",
+                                  corner_radius=6, height=30,
+                                  command=lambda: self.delete_item(item))
+        delete_btn.pack(side="right", padx=(5, 0), fill="x", expand=True)
+        
+        return card
+
+    def add_new_item(self):
+        messagebox.showinfo("Add Item", "Add new item dialog coming soon!")
+
+    def edit_item(self, item):
+        messagebox.showinfo("Edit Item", f"Edit {item['item_name']} dialog coming soon!")
+
+    def delete_item(self, item):
+        result = messagebox.askyesno("Delete Item", f"Are you sure you want to delete {item['item_name']}?")
+        if result:
+            messagebox.showinfo("Deleted", f"{item['item_name']} has been deleted!")
+
+    def show_user_menu(self):
+        messagebox.showinfo("User Menu", "User menu options coming soon!")
+
+class InventoryPage(ctk.CTkFrame):
+    def __init__(self, master, **kwargs):
+        super().__init__(master, **kwargs)
+        self.search_var = ctk.StringVar()
+        self.filter_var = ctk.StringVar(value="All")
+        self.filtered_data = INVENTORY_DATA.copy()
+        self.setup_ui()
+        
+    def setup_ui(self):
+        # Main Content Area Frame
+        self.configure(fg_color=COLOR_MAIN_BG, corner_radius=0)
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_rowconfigure(2, weight=1)
+        
+        # Header with title and user info
+        self.build_header()
+        
+        # Content container
+        content_container = ctk.CTkFrame(self, corner_radius=16, fg_color=COLOR_CARD_BG,
+                                       border_width=1, border_color=COLOR_GRAY_200)
+        content_container.grid(row=1, column=0, sticky="nsew", padx=30, pady=20)
+        content_container.grid_columnconfigure(0, weight=1)
+        content_container.grid_rowconfigure(2, weight=1)
+        
+        # Header Label inside content
+        header_label = ctk.CTkLabel(
+            content_container,
+            text="📦 Inventory Overview",
+            font=FONT_H2,
+            text_color=COLOR_TEXT_PRIMARY
+        )
+        header_label.grid(row=0, column=0, pady=(25, 20), padx=25, sticky="nw")
+        
+        # Search and Filter Bar
+        self.create_search_filter_bar(content_container)
+        
+        # Inventory Table
+        self.create_inventory_table(content_container)
+
+    def build_header(self):
+        """Build the header section with title and user info"""
+        header_frame = ctk.CTkFrame(self, fg_color="transparent", height=80)
+        header_frame.grid(row=0, column=0, sticky="ew", padx=30, pady=(20, 0))
+        header_frame.pack_propagate(False)
+        header_frame.grid_columnconfigure(0, weight=1)
+
+        # Title section
+        title_frame = ctk.CTkFrame(header_frame, fg_color="transparent")
+        title_frame.grid(row=0, column=0, sticky="ew")
+        title_frame.grid_columnconfigure(0, weight=1)
+        
+        title_label = ctk.CTkLabel(title_frame, text="📦 Inventory", 
+                                 font=FONT_H1, text_color=COLOR_TEXT_PRIMARY)
+        title_label.grid(row=0, column=0, sticky="w", pady=(15, 0))
+        
+        subtitle = ctk.CTkLabel(title_frame, text="Manage your inventory items and stock levels", 
+                              font=FONT_BODY, text_color=COLOR_TEXT_MUTED)
+        subtitle.grid(row=1, column=0, sticky="w")
+
+        # Actions section
+        actions_frame = ctk.CTkFrame(header_frame, fg_color="transparent")
+        actions_frame.grid(row=0, column=1, sticky="e")
+
+        # Notification bell
         notif_btn = AnimatedButton(
             actions_frame,
             text="🔔",
@@ -731,162 +642,8 @@ class App(ctk.CTk):
         )
         notif_btn.pack(side="left", padx=10)
 
-        # Profile button
-        profile_btn = AnimatedButton(actions_frame, text="👤 Mingyu Kim ▼", font=FONT_BODY,
-                                   text_color=COLOR_TEXT_SECONDARY, fg_color=COLOR_CARD_BG,
-                                   hover_color=COLOR_SIDEBAR_ACTIVE, corner_radius=8, height=50,
-                                   command=self.show_user_profile)
-        profile_btn.pack(side="left", padx=10)
-
-    def build_overview_section(self):
-        # Main overview container
-        overview_frame = ctk.CTkFrame(self.main_frame, corner_radius=16, fg_color=COLOR_CARD_BG, 
-                                    border_width=1, border_color=COLOR_GRAY_200)
-        overview_frame.pack(fill="x", padx=30, pady=20)
-
-        # Section header
-        header_frame = ctk.CTkFrame(overview_frame, fg_color="transparent")
-        header_frame.pack(fill="x", padx=30, pady=(25, 20))
-        
-        overview_label = ctk.CTkLabel(header_frame, text="📊 Overview", font=FONT_H2, text_color=COLOR_TEXT_PRIMARY)
-        overview_label.pack(side="left")
-        
-        refresh_btn = AnimatedButton(header_frame, text="🔄 Refresh", font=FONT_SMALL,
-                                   fg_color=COLOR_SIDEBAR_BG, text_color=COLOR_TEXT_SECONDARY,
-                                   hover_color=COLOR_SIDEBAR_ACTIVE, corner_radius=6, height=32,
-                                   command=self.refresh_data)
-        refresh_btn.pack(side="right")
-
-        # Cards container
-        cards_frame = ctk.CTkFrame(overview_frame, fg_color="transparent")
-        cards_frame.pack(fill="x", padx=30, pady=(0, 25))
-
-        # Enhanced cards with trends using your color scheme
-        cards_data = [
-            (COLOR_PRIMARY, "📦", "1,247", "Total Products", "up"),
-            (COLOR_ACCENT_SUCCESS, "✅", "15,830", "Items in Stock", "up"),
-            (COLOR_ACCENT_ERROR, "⚠️", "23", "Out of Stock", "down"),
-            (COLOR_ACCENT_WARNING, "🔔", "156", "Low Stock Alerts", "stable")
-        ]
-
-        for bg_color, icon, value, label, trend in cards_data:
-            card = EnhancedCard(cards_frame, bg_color, icon, value, label, trend)
-            card.pack(side="left", expand=True, fill="both", padx=8)
-
-    def build_analytics_section(self):
-        # Analytics container
-        analytics_frame = ctk.CTkFrame(self.main_frame, fg_color="transparent")
-        analytics_frame.pack(fill="x", padx=30, pady=(0, 30))
-
-        # Calendar section
-        calendar_frame = ctk.CTkFrame(analytics_frame, corner_radius=16, fg_color=COLOR_CARD_BG,
-                                    border_width=1, border_color=COLOR_GRAY_200)
-        calendar_frame.pack(side="left", fill="y", padx=(0, 15))
-
-        cal_header = ctk.CTkLabel(calendar_frame, text="📅 Calendar", font=FONT_H3, text_color=COLOR_TEXT_PRIMARY)
-        cal_header.pack(pady=(20, 15))
-
-        calendar = Calendar(
-            calendar_frame,
-            selectmode='day',
-            year=2025, month=6, day=15,
-            background=COLOR_CARD_BG,
-            foreground=COLOR_TEXT_SECONDARY,
-            headersbackground=COLOR_PRIMARY,
-            headersforeground=COLOR_WHITE,
-            selectbackground=COLOR_SECONDARY,
-            selectforeground=COLOR_WHITE,
-            weekendbackground=COLOR_SIDEBAR_BG,
-            weekendforeground=COLOR_TEXT_MUTED,
-            bordercolor=COLOR_GRAY_200,
-            font=FONT_BODY,
-            firstweekday='sunday'
-        )
-        calendar.pack(padx=20, pady=(0, 20))
-
-        # Consumption chart
-        chart_frame = ctk.CTkFrame(analytics_frame, corner_radius=16, fg_color=COLOR_CARD_BG,
-                                 border_width=1, border_color=COLOR_GRAY_200)
-        chart_frame.pack(side="right", fill="both", expand=True)
-
-        chart_header = ctk.CTkFrame(chart_frame, fg_color="transparent")
-        chart_header.pack(fill="x", padx=25, pady=(20, 15))
-        
-        chart_title = ctk.CTkLabel(chart_header, text="📈 Top Consumed Products", 
-                                 font=FONT_H3, text_color=COLOR_TEXT_PRIMARY)
-        chart_title.pack(side="left")
-        
-        period_label = ctk.CTkLabel(chart_header, text="This Week", 
-                                  font=FONT_SMALL, text_color=COLOR_TEXT_MUTED)
-        period_label.pack(side="right")
-
-        # Enhanced consumption bars
-        chart_content = ctk.CTkScrollableFrame(chart_frame, fg_color="transparent")
-        chart_content.pack(fill="both", expand=True, padx=25, pady=(0, 20))
-
-        for i, (item, value, color) in enumerate(MOST_CONSUMED):
-            self.create_consumption_bar(chart_content, item, value, color, i)
-
-    def create_consumption_bar(self, parent, item, value, color, index):
-        bar_container = ctk.CTkFrame(parent, fg_color="transparent", height=50)
-        bar_container.pack(fill="x", pady=8)
-        bar_container.pack_propagate(False)
-
-        # Item info
-        info_frame = ctk.CTkFrame(bar_container, fg_color="transparent")
-        info_frame.pack(fill="x")
-        
-        item_label = ctk.CTkLabel(info_frame, text=item, font=FONT_BODY, text_color=COLOR_TEXT_SECONDARY)
-        item_label.pack(side="left")
-        
-        value_label = ctk.CTkLabel(info_frame, text=f"{value}%", font=FONT_SMALL, text_color=COLOR_TEXT_MUTED)
-        value_label.pack(side="right")
-
-        # Progress bar
-        progress_bg = ctk.CTkFrame(bar_container, fg_color=COLOR_SIDEBAR_BG, height=8, corner_radius=4)
-        progress_bg.pack(fill="x", pady=(5, 0))
-        
-        # Animated progress bar
-        progress_bar = ctk.CTkFrame(progress_bg, fg_color=color, height=8, corner_radius=4)
-        progress_bar.place(x=0, y=0, relheight=1)
-        
-        # Animate the progress bar
-        self.animate_progress_bar(progress_bar, value)
-
-    def animate_progress_bar(self, bar, target_width):
-        def animate():
-            current_width = 0
-            target = target_width / 100  # Convert percentage to decimal
-            step = target / 30  # 30 frames
-            
-            while current_width < target:
-                current_width = min(current_width + step, target)
-                bar.place(x=0, y=0, relwidth=current_width, relheight=1)
-                time.sleep(0.02)
-        
-        threading.Thread(target=animate, daemon=True).start()
-
-    def show_user_profile(self):
-        """Show the user profile popup"""
-        if self.profile_popup is None or not self.profile_popup.winfo_exists():
-            self.profile_popup = UserProfilePopup(self)
-        else:
-            # If popup already exists, bring it to front
-            self.profile_popup.lift()
-            self.profile_popup.focus()
-
-    def show_notifications(self):
-        """Show the notifications popup"""
-        if self.notification_popup is None or not self.notification_popup.winfo_exists():
-            self.notification_popup = NotificationPopup(self)
-        else:
-            # If popup already exists, bring it to front
-            self.notification_popup.lift()
-            self.notification_popup.focus()
-
-    def refresh_data(self):
-        print("Refreshing data...")
-        # Add actual refresh logic here
-if __name__ == "__main__":
-    app = App()
-    app.mainloop()
+        # User dropdown
+        user_btn = AnimatedButton(actions_frame, text="👤 Mingyu Kim ▼", font=FONT_BODY,
+                                text_color=COLOR_TEXT_SECONDARY, fg_color=COLOR_CARD_BG,
+                                hover_color=COLOR_SIDEBAR_ACTIVE, corner_radius=8, height=50,
+                                command=
