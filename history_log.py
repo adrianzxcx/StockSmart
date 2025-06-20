@@ -143,112 +143,6 @@ class ModernSidebar(ctk.CTkFrame):
     def set_active(self, name):
         print(f"{name} clicked")
 
-class FilterPopup(ctk.CTkToplevel):
-    def __init__(self, parent):
-        super().__init__(parent)
-        self.title("Filter History")
-        self.geometry("400x400")
-        self.resizable(False, False)
-        self.parent = parent
-        
-        # Make the popup always stay on top
-        self.attributes("-topmost", True)
-        
-        # Center the popup on the parent window
-        self.transient(parent)
-        
-        # Set focus to this window
-        self.grab_set()
-        self.focus_set()
-        
-        # Position the popup in the center of the parent window
-        self.center_on_parent()
-        
-        # Handle window close event
-        self.protocol("WM_DELETE_WINDOW", self.on_close)
-        
-        self.setup_ui()
-
-    def center_on_parent(self):
-        """Center the popup on the parent window"""
-        self.update_idletasks()  # Ensure the window size is calculated
-        
-        # Get parent window position and size
-        parent_x = self.parent.winfo_x()
-        parent_y = self.parent.winfo_y()
-        parent_width = self.parent.winfo_width()
-        parent_height = self.parent.winfo_height()
-        
-        # Get popup size
-        popup_width = self.winfo_reqwidth()
-        popup_height = self.winfo_reqheight()
-        
-        # Calculate center position
-        x = parent_x + (parent_width - popup_width) // 2
-        y = parent_y + (parent_height - popup_height) // 2
-        
-        # Set the position
-        self.geometry(f"{popup_width}x{popup_height}+{x}+{y}")
-
-    def setup_ui(self):
-        """Setup the UI elements"""
-        # Example filter options
-        self.action_types = {
-            "Add": ctk.BooleanVar(),
-            "Deduct": ctk.BooleanVar(),
-            "Update": ctk.BooleanVar(),
-            "Alert": ctk.BooleanVar(),
-            "Remove": ctk.BooleanVar()
-        }
-        self.user_entry = ctk.CTkEntry(self, placeholder_text="User (optional)")
-        self.date_from = ctk.CTkEntry(self, placeholder_text="From Date (YYYY-MM-DD)")
-        self.date_to = ctk.CTkEntry(self, placeholder_text="To Date (YYYY-MM-DD)")
-
-        ctk.CTkLabel(self, text="Action Types:", font=FONT_H3).pack(anchor="w", padx=20, pady=(20, 0))
-        for name, var in self.action_types.items():
-            ctk.CTkCheckBox(self, text=name, variable=var).pack(anchor="w", padx=40)
-
-        ctk.CTkLabel(self, text="User:", font=FONT_H3).pack(anchor="w", padx=20, pady=(20, 0))
-        self.user_entry.pack(fill="x", padx=40)
-
-        ctk.CTkLabel(self, text="Date Range:", font=FONT_H3).pack(anchor="w", padx=20, pady=(20, 0))
-        self.date_from.pack(fill="x", padx=40, pady=(0, 5))
-        self.date_to.pack(fill="x", padx=40)
-
-        # Button frame for better layout
-        button_frame = ctk.CTkFrame(self, fg_color="transparent")
-        button_frame.pack(pady=20)
-        
-        # Apply button
-        apply_btn = ctk.CTkButton(button_frame, text="Apply Filters", 
-                                 fg_color=COLOR_PRIMARY, hover_color=COLOR_PRIMARY_HOVER,
-                                 command=self.apply)
-        apply_btn.pack(side="left", padx=10)
-        
-        # Cancel button
-        cancel_btn = ctk.CTkButton(button_frame, text="Cancel", 
-                                  fg_color=COLOR_GRAY_600, hover_color=COLOR_GRAY_700,
-                                  command=self.on_close)
-        cancel_btn.pack(side="left", padx=10)
-
-    def apply(self):
-        """Apply filters and close popup"""
-        filters = {
-            "action_types": [k.lower() for k, v in self.action_types.items() if v.get()],
-            "users": [self.user_entry.get()] if self.user_entry.get() else [],
-            "date_from": self.date_from.get(),
-            "date_to": self.date_to.get()
-        }
-        self.parent.apply_filters(filters)
-        self.on_close()
-
-    def on_close(self):
-        """Handle window close event"""
-        # Reset the filter popup reference in parent
-        self.parent.filter_popup = None
-        self.grab_release()
-        self.destroy()
-
 class HistoryLogsPage(ctk.CTk):
     def __init__(self):
         super().__init__()
@@ -256,9 +150,6 @@ class HistoryLogsPage(ctk.CTk):
         self.geometry("1200x800")
         self.minsize(1000, 700)
         self.configure(bg=COLOR_MAIN_BG)
-        
-        # Initialize filter popup reference
-        self.filter_popup = None
         
         # Sample history data
         self.history_data = self.generate_history_data()
@@ -430,16 +321,6 @@ class HistoryLogsPage(ctk.CTk):
         self.search_entry.pack(side="left", expand=True, fill="x", pady=15)
         self.search_entry.bind("<KeyRelease>", self.on_search)
 
-        # Filter section
-        filter_frame = ctk.CTkFrame(toolbar_frame, fg_color="transparent")
-        filter_frame.pack(side="right", padx=(15, 0))
-
-        filter_btn = AnimatedButton(filter_frame, text="🔽 Filter", font=FONT_BODY,
-                                  fg_color=COLOR_SECONDARY, hover_color=COLOR_SECONDARY_DARK,
-                                  text_color=COLOR_WHITE, corner_radius=8, height=40,
-                                  command=self.show_filter_menu)
-        filter_btn.pack(pady=15)
-
     def build_history_feed(self, parent):
         """Build the scrollable history feed"""
         # Feed container
@@ -533,15 +414,6 @@ class HistoryLogsPage(ctk.CTk):
         search_term = self.search_entry.get().lower()
         print(f"Searching for: {search_term}")
         # Implement search filtering logic here
-
-    def show_filter_menu(self):
-        """Show filter options menu - only if not already open"""
-        if self.filter_popup is None or not self.filter_popup.winfo_exists():
-            self.filter_popup = FilterPopup(self)
-        else:
-            # If popup already exists, bring it to front and focus
-            self.filter_popup.lift()
-            self.filter_popup.focus_set()
 
     def show_notifications(self):
         """Show notifications"""
