@@ -467,6 +467,144 @@ class UserProfilePopup(ctk.CTkToplevel):
         self.grab_release()
         self.destroy()
 
+class NotificationPopup(ctk.CTkToplevel):
+    def __init__(self, master, **kwargs):
+        super().__init__(master, **kwargs)
+        self.master = master
+        self.setup_window()
+        self.setup_ui()
+        
+        # Center the popup on the parent window
+        self.center_on_parent()
+        
+        # Make the popup modal
+        self.transient(master)
+        self.grab_set()
+        
+        # Handle window close
+        self.protocol("WM_DELETE_WINDOW", self.on_close)
+
+    def setup_window(self):
+        self.title("Notifications")
+        self.geometry("550x400")
+        self.resizable(False, False)
+        self.configure(fg_color=COLOR_MAIN_BG)
+
+    def center_on_parent(self):
+        """Center the popup window on the parent window"""
+        self.update_idletasks()
+        
+        # Get parent window geometry
+        parent_x = self.master.winfo_x()
+        parent_y = self.master.winfo_y()
+        parent_width = self.master.winfo_width()
+        parent_height = self.master.winfo_height()
+        
+        # Calculate center position
+        popup_width = 550
+        popup_height = 400
+        x = parent_x + (parent_width - popup_width) // 2
+        y = parent_y + (parent_height - popup_height) // 2
+        
+        self.geometry(f"{popup_width}x{popup_height}+{x}+{y}")
+
+    def setup_ui(self):
+        # Main container
+        main_container = ctk.CTkFrame(self, fg_color=COLOR_WHITE, corner_radius=20, 
+                                    border_width=2, border_color=COLOR_GRAY_200)
+        main_container.pack(fill="both", expand=True, padx=20, pady=20)
+        
+        # Header with close button
+        header_frame = ctk.CTkFrame(main_container, fg_color="transparent", height=60)
+        header_frame.pack(fill="x", padx=25, pady=(20, 0))
+        header_frame.pack_propagate(False)
+
+        title_label = ctk.CTkLabel(header_frame, text="Notifications", font=FONT_H2, text_color=COLOR_TEXT_PRIMARY)
+        title_label.pack(side="left", pady=15)
+
+        # Close button
+        close_btn = AnimatedButton(header_frame, text="✕", font=("Segoe UI", 16, "bold"),
+                                 fg_color="transparent", hover_color=COLOR_GRAY_100,
+                                 text_color=COLOR_GRAY_600, corner_radius=15, width=30, height=30,
+                                 command=self.on_close)
+        close_btn.pack(side="right", pady=15)
+
+        # Notifications list
+        notifications_frame = ctk.CTkScrollableFrame(main_container, fg_color="transparent")
+        notifications_frame.pack(fill="both", expand=True, padx=25, pady=(0, 20))
+
+        # Sample notifications data
+        notifications = [
+            {
+                "type": "error",
+                "icon": "⚠️",
+                "title": "Ketchup is currently out of stock.",
+                "date": "May 23, 2025",
+                "bg_color": "#fff5f5",
+                "border_color": "#fed7d7"
+            },
+            {
+                "type": "warning", 
+                "icon": "⚠️",
+                "title": "Soy Sauce is running low on stocks.\nOnly 4 remaining.",
+                "date": "May 23, 2025",
+                "bg_color": "#fffbeb",
+                "border_color": "#fed7aa"
+            },
+            {
+                "type": "warning",
+                "icon": "⚠️", 
+                "title": "Fish Sauce is running low on stocks.\nOnly 2 remaining.",
+                "date": "May 23, 2025",
+                "bg_color": "#fffbeb",
+                "border_color": "#fed7aa"
+            },
+            {
+                "type": "info",
+                "icon": "🕐",
+                "title": "Sugar is nearing its expiry date.\nExpiry: May 31, 2025.",
+                "date": "May 23, 2025", 
+                "bg_color": "#fef2f2",
+                "border_color": "#fecaca"
+            }
+        ]
+
+        for notification in notifications:
+            self.create_notification_item(notifications_frame, notification)
+
+    def create_notification_item(self, parent, notification):
+        # Notification item container
+        item_frame = ctk.CTkFrame(parent, fg_color=notification["bg_color"], 
+                                corner_radius=8, border_width=1, border_color=notification["border_color"])
+        item_frame.pack(fill="x", pady=5)
+
+        # Content frame
+        content_frame = ctk.CTkFrame(item_frame, fg_color="transparent")
+        content_frame.pack(fill="x", padx=15, pady=12)
+
+        # Icon and content
+        icon_label = ctk.CTkLabel(content_frame, text=notification["icon"], font=("Segoe UI", 18))
+        icon_label.pack(side="left", padx=(0, 12))
+
+        # Text content
+        text_frame = ctk.CTkFrame(content_frame, fg_color="transparent")
+        text_frame.pack(side="left", expand=True, fill="x")
+
+        title_label = ctk.CTkLabel(text_frame, text=notification["title"], 
+                                 font=FONT_BODY, text_color=COLOR_TEXT_PRIMARY, 
+                                 anchor="w", justify="left")
+        title_label.pack(anchor="w")
+
+        # Date
+        date_label = ctk.CTkLabel(content_frame, text=notification["date"], 
+                                font=FONT_SMALL, text_color=COLOR_TEXT_MUTED)
+        date_label.pack(side="right")
+
+    def on_close(self):
+        """Handle window close event"""
+        self.grab_release()
+        self.destroy()
+
 class ModernSidebar(ctk.CTkFrame):
     def __init__(self, master, **kwargs):
         super().__init__(master, width=280, fg_color=COLOR_SAPPHIRE, corner_radius=0, **kwargs)
@@ -541,6 +679,7 @@ class App(ctk.CTk):
         self.configure(bg=COLOR_MAIN_BG)
 
         self.profile_popup = None
+        self.notification_popup = None
         self.setup_ui()
 
     def setup_ui(self):
@@ -578,12 +717,19 @@ class App(ctk.CTk):
         actions_frame.pack(side="right")
 
         # Notification bell with badge
-        notif_frame = ctk.CTkFrame(actions_frame, fg_color=COLOR_CARD_BG, corner_radius=8, width=50, height=50)
-        notif_frame.pack(side="left", padx=10)
-        notif_frame.pack_propagate(False)
-        
-        bell = ctk.CTkLabel(notif_frame, text="🔔", font=("Segoe UI", 18))
-        bell.pack(expand=True)
+        notif_btn = AnimatedButton(
+            actions_frame,
+            text="🔔",
+            font=("Segoe UI", 18),
+            fg_color=COLOR_CARD_BG,
+            hover_color=COLOR_SIDEBAR_ACTIVE,
+            text_color=COLOR_TEXT_SECONDARY,
+            corner_radius=8,
+            width=50,
+            height=50,
+            command=self.show_notifications
+        )
+        notif_btn.pack(side="left", padx=10)
 
         # Profile button
         profile_btn = AnimatedButton(actions_frame, text="👤 Mingyu Kim ▼", font=FONT_BODY,
@@ -729,10 +875,18 @@ class App(ctk.CTk):
             self.profile_popup.lift()
             self.profile_popup.focus()
 
+    def show_notifications(self):
+        """Show the notifications popup"""
+        if self.notification_popup is None or not self.notification_popup.winfo_exists():
+            self.notification_popup = NotificationPopup(self)
+        else:
+            # If popup already exists, bring it to front
+            self.notification_popup.lift()
+            self.notification_popup.focus()
+
     def refresh_data(self):
         print("Refreshing data...")
         # Add actual refresh logic here
-
 if __name__ == "__main__":
     app = App()
     app.mainloop()
