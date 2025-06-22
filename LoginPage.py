@@ -187,18 +187,6 @@ def signin_click():
     
     threading.Thread(target=reset_button, daemon=True).start()
 
-def show_success_message():
-    """Show a temporary success message"""
-    success_label = ctk.CTkLabel(
-        left_inner_frame,
-        text="✓ Login Successful!",
-        font=ctk.CTkFont(family="Instrument Sans", size=18, weight="bold"),
-        text_color="#2d5016"
-    )
-    success_label.grid(row=9, column=0, pady=(10, 0))
-    
-    # Remove success message after 2 seconds
-    app.after(2000, success_label.destroy)
 
 def forgot_password_click(event):
     """Handle forgot password click"""
