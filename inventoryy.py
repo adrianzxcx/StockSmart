@@ -356,7 +356,7 @@ class InventoryPage(ctk.CTkFrame):
         table_container.grid_rowconfigure(0, weight=1)
         
         # Scrollable frame for table
-        self.table_scroll = ctk.CTkScrollableFrame(table_container, fg_color="transparent")
+        self.table_scroll = ctk.CTkScrollableFrame(table_container, fg_color="transparent", height=450)
         self.table_scroll.grid(row=0, column=0, sticky="nsew")
         self.table_scroll.grid_columnconfigure(0, weight=1)
         
@@ -367,14 +367,22 @@ class InventoryPage(ctk.CTkFrame):
         self.create_table_rows()
 
     def create_table_header(self):
-        """Create table header"""
+        """Create table header with uniform columns"""
         header_frame = ctk.CTkFrame(self.table_scroll, fg_color=COLOR_SECONDARY, corner_radius=8, height=50)
         header_frame.grid(row=0, column=0, sticky="ew", pady=(0, 5))
         header_frame.grid_propagate(False)
-        header_frame.grid_columnconfigure((0,1,2,3,4,5,6,7), weight=1)
+        
+        # Set column configurations with different weights for better text visibility
+        header_frame.grid_columnconfigure(0, weight=1, uniform="col1", minsize=80)   # Item No.
+        header_frame.grid_columnconfigure(1, weight=2, uniform="col2", minsize=150)  # Item Name (wider)
+        header_frame.grid_columnconfigure(2, weight=1, uniform="col3", minsize=80)   # Quantity
+        header_frame.grid_columnconfigure(3, weight=1, uniform="col4", minsize=60)   # Unit
+        header_frame.grid_columnconfigure(4, weight=1, uniform="col5", minsize=80)   # Price
+        header_frame.grid_columnconfigure(5, weight=1, uniform="col6", minsize=100)  # Status
+        header_frame.grid_columnconfigure(6, weight=1, uniform="col7", minsize=100)  # Last Updated
+        header_frame.grid_columnconfigure(7, weight=2, uniform="col8", minsize=180)  # Actions (wider for buttons)
         
         headers = ["Item No.", "Item Name", "Quantity", "Unit", "Price", "Status", "Last Updated", "Actions"]
-        
         for i, header in enumerate(headers):
             header_label = ctk.CTkLabel(
                 header_frame,
@@ -382,7 +390,7 @@ class InventoryPage(ctk.CTkFrame):
                 font=ctk.CTkFont(weight="bold", size=14),
                 text_color=COLOR_WHITE
             )
-            header_label.grid(row=0, column=i, padx=10, pady=15, sticky="w")
+            header_label.grid(row=0, column=i, padx=8, pady=15, sticky="nsew")
 
     def create_table_rows(self):
         """Create table rows based on filtered data"""
@@ -394,16 +402,22 @@ class InventoryPage(ctk.CTkFrame):
             self.create_table_row(item, i + 1)
 
     def create_table_row(self, item, row_index):
-        """Create a single table row"""
-        # Alternate row colors
+        """Create a single table row with uniform columns and improved action buttons"""
         row_color = COLOR_WHITE if row_index % 2 == 0 else COLOR_GRAY_50
-        
         row_frame = ctk.CTkFrame(self.table_scroll, fg_color=row_color, corner_radius=8, height=60)
         row_frame.grid(row=row_index, column=0, sticky="ew", pady=2)
         row_frame.grid_propagate(False)
-        row_frame.grid_columnconfigure((0,1,2,3,4,5,6,7), weight=1)
         
-        # Item data
+        # Use same column configuration as header for consistency
+        row_frame.grid_columnconfigure(0, weight=1, uniform="col1", minsize=80)   # Item No.
+        row_frame.grid_columnconfigure(1, weight=2, uniform="col2", minsize=150)  # Item Name (wider)
+        row_frame.grid_columnconfigure(2, weight=1, uniform="col3", minsize=80)   # Quantity
+        row_frame.grid_columnconfigure(3, weight=1, uniform="col4", minsize=60)   # Unit
+        row_frame.grid_columnconfigure(4, weight=1, uniform="col5", minsize=80)   # Price
+        row_frame.grid_columnconfigure(5, weight=1, uniform="col6", minsize=100)  # Status
+        row_frame.grid_columnconfigure(6, weight=1, uniform="col7", minsize=100)  # Last Updated
+        row_frame.grid_columnconfigure(7, weight=2, uniform="col8", minsize=180)  # Actions (wider for buttons)
+        
         data = [
             item["item_no"],
             item["item_name"],
@@ -415,7 +429,6 @@ class InventoryPage(ctk.CTkFrame):
             ""  # Actions column
         ]
         
-        # Status colors
         status_colors = {
             "Good": COLOR_ACCENT_SUCCESS,
             "Low Stock": COLOR_ACCENT_WARNING,
@@ -430,75 +443,92 @@ class InventoryPage(ctk.CTkFrame):
                     font=ctk.CTkFont(weight="bold", size=12),
                     text_color=status_colors.get(cell_data, COLOR_TEXT_PRIMARY)
                 )
-                status_label.grid(row=0, column=i, padx=10, pady=15, sticky="w")
+                status_label.grid(row=0, column=i, padx=8, pady=10, sticky="nsew")
             else:
                 cell_label = ctk.CTkLabel(
                     row_frame,
                     text=cell_data,
                     font=FONT_BODY,
-                    text_color=COLOR_TEXT_PRIMARY
+                    text_color=COLOR_TEXT_PRIMARY,
+                    anchor="w" if i == 1 else "center"  # Left align item names, center others
                 )
-                cell_label.grid(row=0, column=i, padx=10, pady=15, sticky="w")
+                cell_label.grid(row=0, column=i, padx=8, pady=10, sticky="nsew")
         
-        # Actions column
+        # Actions column with improved uniform button layout
         actions_frame = ctk.CTkFrame(row_frame, fg_color="transparent")
-        actions_frame.grid(row=0, column=7, padx=10, pady=10, sticky="ew")
+        actions_frame.grid(row=0, column=7, padx=8, pady=8, sticky="nsew")
+        
+        # Create a centered container for buttons
+        button_container = ctk.CTkFrame(actions_frame, fg_color="transparent")
+        button_container.pack(expand=True)
+        
+        # Button configuration
+        btn_width = 36
+        btn_height = 36
+        btn_spacing = 4
         
         # Edit button
         edit_btn = AnimatedButton(
-            actions_frame,
-            text="✏️",
-            font=("Segoe UI", 12),
+            button_container,
+            text="📝",
+            font=("Segoe UI", 14),
             fg_color=COLOR_SECONDARY,
             hover_color=COLOR_SECONDARY_DARK,
-            corner_radius=6,
-            width=30,
-            height=30,
+            text_color=COLOR_WHITE,
+            corner_radius=8,
+            width=btn_width,
+            height=btn_height,
+            border_width=0,
             command=lambda: self.edit_item(item)
         )
-        edit_btn.pack(side="left", padx=2)
-        
+        edit_btn.pack(side="left", padx=(0, btn_spacing))
+
         # Delete button
         delete_btn = AnimatedButton(
-            actions_frame,
-            text="🗑️",
-            font=("Segoe UI", 12),
+            button_container,
+            text="🗑",
+            font=("Segoe UI", 14),
             fg_color=COLOR_ACCENT_ERROR,
             hover_color="#5a1f1f",
-            corner_radius=6,
-            width=30,
-            height=30,
+            text_color=COLOR_WHITE,
+            corner_radius=8,
+            width=btn_width,
+            height=btn_height,
+            border_width=0,
             command=lambda: self.delete_item(item)
         )
-        delete_btn.pack(side="left", padx=2)
-        
-        # Stock adjustment buttons
+        delete_btn.pack(side="left", padx=(0, btn_spacing))
+
         if item["quantity"] > 0:
             minus_btn = AnimatedButton(
-                actions_frame,
+                button_container,
                 text="➖",
-                font=("Segoe UI", 12),
+                font=("Segoe UI", 14),
                 fg_color=COLOR_ACCENT_WARNING,
                 hover_color="#6b5410",
-                corner_radius=6,
-                width=30,
-                height=30,
+                text_color=COLOR_WHITE,
+                corner_radius=8,
+                width=btn_width,
+                height=btn_height,
+                border_width=0,
                 command=lambda: self.adjust_stock(item, -1)
             )
-            minus_btn.pack(side="left", padx=2)
-        
+            minus_btn.pack(side="left", padx=(0, btn_spacing))
+
         plus_btn = AnimatedButton(
-            actions_frame,
+            button_container,
             text="➕",
-            font=("Segoe UI", 12),
+            font=("Segoe UI", 14),
             fg_color=COLOR_ACCENT_SUCCESS,
             hover_color="#1f3f1c",
-            corner_radius=6,
-            width=30,
-            height=30,
+            text_color=COLOR_WHITE,
+            corner_radius=8,
+            width=btn_width,
+            height=btn_height,
+            border_width=0,
             command=lambda: self.adjust_stock(item, 1)
         )
-        plus_btn.pack(side="left", padx=2)
+        plus_btn.pack(side="left", padx=(0, btn_spacing))
 
     def apply_filters(self):
         """Apply search and filter to inventory data"""
