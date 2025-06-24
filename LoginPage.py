@@ -182,9 +182,7 @@ def signin_click():
         global is_animating
         is_animating = False
         
-        # Show success animation
-        app.after(0, show_success_message)
-    
+        
     threading.Thread(target=reset_button, daemon=True).start()
 
 

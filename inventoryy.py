@@ -1,6 +1,8 @@
 import customtkinter as ctk
 from tkinter import messagebox
 from datetime import datetime
+from PIL import Image
+from customtkinter import CTkImage
 
 # Colors (Enhanced palette from the second file)
 COLOR_GREY_BEIGE = "#f5f5eb"  # Grey Beige - Primary Background
@@ -148,19 +150,24 @@ class ModernSidebar(ctk.CTkFrame):
         self.setup_ui()
         
     def setup_ui(self):
-        # Logo section with better styling
         logo_frame = ctk.CTkFrame(self, fg_color="transparent", height=100)
         logo_frame.pack(fill="x", pady=(30, 40))
         logo_frame.pack_propagate(False)
-        
-        logo_icon = ctk.CTkLabel(logo_frame, text="📊", font=("Segoe UI", 32))
-        logo_icon.pack()
-        
-        logo_label = ctk.CTkLabel(logo_frame, text="StockSmart", font=FONT_H1, text_color=COLOR_ROYAL_BLUE)
-        logo_label.pack(pady=(5, 0))
-        
-        subtitle = ctk.CTkLabel(logo_frame, text="Inventory Management", font=FONT_SMALL, text_color=COLOR_ROYAL_BLUE)
-        subtitle.pack()
+        logo_frame.grid_columnconfigure(1, weight=1)
+
+        # Load and place logo image
+        logo_image = Image.open("LOGO2.png")
+        logo_ctk = CTkImage(light_image=logo_image, size=(60, 60))
+        logo_icon = ctk.CTkLabel(logo_frame, image=logo_ctk, text="")
+        logo_icon.grid(row=0, column=0, padx=(20, 0), sticky="w")
+
+        # App name and subtitle next to logo
+        text_frame = ctk.CTkFrame(logo_frame, fg_color="transparent")
+        text_frame.grid(row=0, column=1, sticky="w")
+
+        logo_label = ctk.CTkLabel(text_frame, text="StockSmart", font=FONT_H1, text_color=COLOR_ROYAL_BLUE)
+        logo_label.pack(anchor="w")
+
 
         # Navigation with modern design
         nav_frame = ctk.CTkFrame(self, fg_color="transparent")
@@ -255,7 +262,8 @@ class InventoryPage(ctk.CTkFrame):
         title_frame.grid(row=0, column=0, sticky="ew")
         title_frame.grid_columnconfigure(0, weight=1)
         
-        title_label = ctk.CTkLabel(title_frame, text="📦 Inventory", 
+        
+        title_label = ctk.CTkLabel(title_frame, text=" Inventory", 
                                  font=FONT_H1, text_color=COLOR_TEXT_PRIMARY)
         title_label.grid(row=0, column=0, sticky="w", pady=(15, 0))
         
