@@ -4,7 +4,7 @@ from datetime import datetime
 from PIL import Image
 from customtkinter import CTkImage
 
-# Colors (Enhanced palette from the second file)
+# Colors (Enhanced palette from the inventory code)
 COLOR_GREY_BEIGE = "#f5f5eb"  # Grey Beige - Primary Background
 COLOR_ROYAL_BLUE = "#11225b"  # Royal Blue - Primary Actions
 COLOR_SAPPHIRE = "#8094c2"    # Sapphire - Secondary Elements
@@ -53,79 +53,117 @@ FONT_SMALL = ("Segoe UI", 12)
 FONT_BUTTON = ("Segoe UI", 14, "bold")
 FONT_CARD_VALUE = ("Segoe UI", 32, "bold")
 
-# Sample inventory data
-INVENTORY_DATA = [
+# Sample items data with more details
+ITEMS_DATA = [
     {
-        "item_no": "001",
+        "item_no": "0001",
         "item_name": "Cooking Oil",
         "image_path": "cooking_oil.png",
-        "quantity": 25,
-        "unit": "Liters",
-        "last_updated": "2025-06-20", 
-        "status": "Good",
-        "price": 45.00,
+        "type": "Staple",
+        "unit": "bottle",
+        "storage_location": "Pantry",
+        "category": "Oils & Fats",
         "supplier": "Golden Oil Co.",
-        "category": "Oils & Fats"
+        "description": "Premium cooking oil for all kitchen needs"
     },
     {
-        "item_no": "002", 
-        "item_name": "Fresh Tomatoes",
+        "item_no": "0002", 
+        "item_name": "Tomato",
         "image_path": "tomato.png",
-        "quantity": 8,
-        "unit": "kg",
-        "last_updated": "2025-06-19",
-        "status": "Low Stock",
-        "price": 120.00,
+        "type": "Fruit",
+        "unit": "pieces",
+        "storage_location": "Pantry",
+        "category": "Vegetables",
         "supplier": "Fresh Farms",
-        "category": "Vegetables"
+        "description": "Fresh red tomatoes"
     },
     {
-        "item_no": "003",
+        "item_no": "0003",
+        "item_name": "Potato",
+        "image_path": "potato.png", 
+        "type": "Vegetable",
+        "unit": "pieces",
+        "storage_location": "Pantry",
+        "category": "Vegetables",
+        "supplier": "Fresh Farms",
+        "description": "Quality potatoes for cooking"
+    },
+    {
+        "item_no": "0004",
+        "item_name": "Carrot",
+        "image_path": "carrot.png",
+        "type": "Vegetable",
+        "unit": "pieces",
+        "storage_location": "Refrigerator",
+        "category": "Vegetables",
+        "supplier": "Fresh Farms",
+        "description": "Fresh orange carrots"
+    },
+    {
+        "item_no": "0005",
+        "item_name": "Onion",
+        "image_path": "onion.png",
+        "type": "Vegetable", 
+        "unit": "pieces",
+        "storage_location": "Pantry",
+        "category": "Vegetables",
+        "supplier": "Fresh Farms",
+        "description": "Red onions for cooking"
+    },
+    {
+        "item_no": "0006",
         "item_name": "Soy Sauce",
-        "image_path": "soy_sauce.png", 
-        "quantity": 0,
-        "unit": "Bottles",
-        "last_updated": "2025-06-18",
-        "status": "Out of Stock",
-        "price": 35.00,
+        "image_path": "soy_sauce.png",
+        "type": "Condiment",
+        "unit": "bottle",
+        "storage_location": "Pantry",
+        "category": "Condiments",
         "supplier": "Asian Flavors Inc.",
-        "category": "Condiments"
+        "description": "Premium soy sauce"
     },
     {
-        "item_no": "004",
-        "item_name": "Rice",
-        "image_path": "rice.png",
-        "quantity": 50,
-        "unit": "kg",
-        "last_updated": "2025-06-21",
-        "status": "Good",
-        "price": 85.00,
-        "supplier": "Rice Masters",
-        "category": "Grains"
+        "item_no": "0007",
+        "item_name": "Fish Sauce",
+        "image_path": "fish_sauce.png",
+        "type": "Condiment",
+        "unit": "bottle",
+        "storage_location": "Pantry",
+        "category": "Condiments",
+        "supplier": "Asian Flavors Inc.",
+        "description": "Traditional fish sauce"
     },
     {
-        "item_no": "005",
-        "item_name": "Garlic",
-        "image_path": "garlic.png",
-        "quantity": 3,
-        "unit": "kg", 
-        "last_updated": "2025-06-20",
-        "status": "Low Stock",
-        "price": 200.00,
-        "supplier": "Spice World",
-        "category": "Spices"
+        "item_no": "0008",
+        "item_name": "Ketchup",
+        "image_path": "ketchup.png",
+        "type": "Condiment",
+        "unit": "bottle",
+        "storage_location": "Refrigerator",
+        "category": "Condiments",
+        "supplier": "Condiment Co.",
+        "description": "Tomato ketchup"
     },
     {
-        "item_no": "006",
+        "item_no": "0009",
         "item_name": "Sugar",
         "image_path": "sugar.png",
-        "quantity": 12,
-        "unit": "kg",
-        "last_updated": "2025-06-19",
-        "status": "Good",
-        "price": 60.00,
+        "type": "Staple",
+        "unit": "pack",
+        "storage_location": "Pantry",
+        "category": "Sweeteners",
         "supplier": "Sweet Supply Co.",
-        "category": "Sweeteners"
+        "description": "White granulated sugar"
+    },
+    {
+        "item_no": "0010",
+        "item_name": "Flour",
+        "image_path": "flour.png",
+        "type": "Staple",
+        "unit": "pack",
+        "storage_location": "Pantry",
+        "category": "Grains",
+        "supplier": "Flour Mills Inc.",
+        "description": "All-purpose flour"
     }
 ]
 
@@ -156,10 +194,15 @@ class ModernSidebar(ctk.CTkFrame):
         logo_frame.grid_columnconfigure(1, weight=1)
 
         # Load and place logo image
-        logo_image = Image.open("LOGO2.png")
-        logo_ctk = CTkImage(light_image=logo_image, size=(60, 60))
-        logo_icon = ctk.CTkLabel(logo_frame, image=logo_ctk, text="")
-        logo_icon.grid(row=0, column=0, padx=(20, 0), sticky="w")
+        try:
+            logo_image = Image.open("LOGO2.png")
+            logo_ctk = CTkImage(light_image=logo_image, size=(60, 60))
+            logo_icon = ctk.CTkLabel(logo_frame, image=logo_ctk, text="")
+            logo_icon.grid(row=0, column=0, padx=(20, 0), sticky="w")
+        except:
+            # Fallback if logo image not found
+            logo_icon = ctk.CTkLabel(logo_frame, text="📦", font=("Segoe UI", 40), text_color=COLOR_ROYAL_BLUE)
+            logo_icon.grid(row=0, column=0, padx=(20, 0), sticky="w")
 
         # App name and subtitle next to logo
         text_frame = ctk.CTkFrame(logo_frame, fg_color="transparent")
@@ -168,15 +211,14 @@ class ModernSidebar(ctk.CTkFrame):
         logo_label = ctk.CTkLabel(text_frame, text="StockSmart", font=FONT_H1, text_color=COLOR_ROYAL_BLUE)
         logo_label.pack(anchor="w")
 
-
         # Navigation with modern design
         nav_frame = ctk.CTkFrame(self, fg_color="transparent")
         nav_frame.pack(fill="x", padx=20)
 
         nav_buttons = [
             ("Dashboard", "🏠", False),
-            ("Inventory", "📦", True),  # This is now active
-            ("Items", "🏷️", False),
+            ("Inventory", "📦", False),
+            ("Items", "🏷️", True),  # This is now active
             ("History Logs", "📋", False)
         ]
 
@@ -211,12 +253,12 @@ class ModernSidebar(ctk.CTkFrame):
     def set_active(self, name):
         print(f"{name} clicked")
 
-class InventoryPage(ctk.CTkFrame):
+class ItemsPage(ctk.CTkFrame):
     def __init__(self, master, **kwargs):
         super().__init__(master, **kwargs)
         self.search_var = ctk.StringVar()
         self.filter_var = ctk.StringVar(value="All")
-        self.filtered_data = INVENTORY_DATA.copy()
+        self.filtered_data = ITEMS_DATA.copy()
         self.setup_ui()
         
     def setup_ui(self):
@@ -233,22 +275,51 @@ class InventoryPage(ctk.CTkFrame):
                                        border_width=1, border_color=COLOR_GRAY_200)
         content_container.grid(row=1, column=0, sticky="nsew", padx=30, pady=20)
         content_container.grid_columnconfigure(0, weight=1)
-        content_container.grid_rowconfigure(2, weight=1)
+        content_container.grid_rowconfigure(3, weight=1)
         
         # Header Label inside content
+        header_frame = ctk.CTkFrame(content_container, fg_color="transparent")
+        header_frame.grid(row=0, column=0, sticky="ew", padx=25, pady=(25, 0))
+        header_frame.grid_columnconfigure(0, weight=1)
+        
         header_label = ctk.CTkLabel(
-            content_container,
-            text="📦 Inventory Overview",
+            header_frame,
+            text="Item Management",
             font=FONT_H2,
             text_color=COLOR_TEXT_PRIMARY
         )
-        header_label.grid(row=0, column=0, pady=(25, 20), padx=25, sticky="nw")
+        header_label.grid(row=0, column=0, sticky="w")
         
-        # Search and Filter Bar
+        subtitle_label = ctk.CTkLabel(
+            header_frame,
+            text="Today, May 25, 2025",
+            font=FONT_BODY,
+            text_color=COLOR_TEXT_MUTED
+        )
+        subtitle_label.grid(row=1, column=0, sticky="w", pady=(5, 0))
+        
+        # Add Item button
+        add_btn = AnimatedButton(
+            header_frame,
+            text="+ Add Item",
+            font=FONT_BUTTON,
+            fg_color=COLOR_PRIMARY,
+            hover_color=COLOR_PRIMARY_HOVER,
+            corner_radius=8,
+            height=40,
+            width=120,
+            command=self.add_item
+        )
+        add_btn.grid(row=0, column=1, rowspan=2, sticky="e")
+        
+        # Search and Filter Bar (Updated to match inventory page)
         self.create_search_filter_bar(content_container)
         
-        # Inventory Table
-        self.create_inventory_table(content_container)
+        # Category Filter Tabs
+        self.create_category_tabs(content_container)
+        
+        # Items Table
+        self.create_items_table(content_container)
 
     def build_header(self):
         """Build the header section with title and user info"""
@@ -262,12 +333,11 @@ class InventoryPage(ctk.CTkFrame):
         title_frame.grid(row=0, column=0, sticky="ew")
         title_frame.grid_columnconfigure(0, weight=1)
         
-        
-        title_label = ctk.CTkLabel(title_frame, text=" Inventory", 
+        title_label = ctk.CTkLabel(title_frame, text="Items", 
                                  font=FONT_H1, text_color=COLOR_TEXT_PRIMARY)
         title_label.grid(row=0, column=0, sticky="w", pady=(15, 0))
         
-        subtitle = ctk.CTkLabel(title_frame, text="Manage your inventory items and stock levels", 
+        subtitle = ctk.CTkLabel(title_frame, text="Manage your inventory items and categories", 
                               font=FONT_BODY, text_color=COLOR_TEXT_MUTED)
         subtitle.grid(row=1, column=0, sticky="w")
 
@@ -291,26 +361,26 @@ class InventoryPage(ctk.CTkFrame):
         notif_btn.pack(side="left", padx=10)
 
         # User dropdown
-        user_btn = AnimatedButton(actions_frame, text="👤 Mingyu Kim ▼", font=FONT_BODY,
+        user_btn = AnimatedButton(actions_frame, text="👤 User Name ▼", font=FONT_BODY,
                                 text_color=COLOR_TEXT_SECONDARY, fg_color=COLOR_CARD_BG,
                                 hover_color=COLOR_SIDEBAR_ACTIVE, corner_radius=8, height=50,
                                 command=self.show_user_menu)
         user_btn.pack(side="left", padx=10)
 
     def create_search_filter_bar(self, parent):
-        """Create search and filter controls"""
+        """Create search and filter controls matching inventory page style"""
         filter_frame = ctk.CTkFrame(parent, fg_color="transparent")
-        filter_frame.grid(row=1, column=0, sticky="ew", padx=25, pady=(0, 20))
+        filter_frame.grid(row=1, column=0, sticky="ew", padx=25, pady=(20, 10))
         filter_frame.grid_columnconfigure(1, weight=1)
         
         # Filter dropdown
         filter_label = ctk.CTkLabel(filter_frame, text="Filter:", font=FONT_BODY, text_color=COLOR_TEXT_MUTED)
         filter_label.grid(row=0, column=0, padx=(0, 10), sticky="w")
         
-        status_options = ["All", "Good", "Low Stock", "Out of Stock"]
+        type_options = ["All", "Fruit", "Vegetable", "Condiment", "Staple"]
         filter_dropdown = ctk.CTkComboBox(
             filter_frame,
-            values=status_options,
+            values=type_options,
             variable=self.filter_var,
             font=FONT_BODY,
             dropdown_font=FONT_BODY,
@@ -355,16 +425,44 @@ class InventoryPage(ctk.CTkFrame):
         )
         search_btn.grid(row=0, column=4, sticky="w")
 
-    def create_inventory_table(self, parent):
-        """Create the inventory table with scrollable content"""
+    def create_category_tabs(self, parent):
+        """Create category filter tabs"""
+        tabs_frame = ctk.CTkFrame(parent, fg_color="transparent")
+        tabs_frame.grid(row=2, column=0, sticky="ew", padx=25, pady=(10, 20))
+        
+        categories = ["All", "Fruits", "Vegetables", "Condiments and Sauces", "Staples", "Condiments", "Dairy"]
+        self.active_category = "All"
+        self.category_buttons = {}
+        
+        for i, category in enumerate(categories):
+            is_active = category == "All"
+            
+            btn = AnimatedButton(
+                tabs_frame,
+                text=category,
+                font=FONT_BODY,
+                fg_color=COLOR_PRIMARY if is_active else "transparent",
+                hover_color=COLOR_PRIMARY_HOVER if is_active else COLOR_SIDEBAR_ACTIVE,
+                text_color=COLOR_WHITE if is_active else COLOR_TEXT_SECONDARY,
+                corner_radius=8,
+                height=35,
+                border_width=0 if is_active else 1,
+                border_color=COLOR_GRAY_300,
+                command=lambda c=category: self.set_active_category(c)
+            )
+            btn.pack(side="left", padx=(0, 10))
+            self.category_buttons[category] = btn
+
+    def create_items_table(self, parent):
+        """Create the items table with scrollable content"""
         # Table container
         table_container = ctk.CTkFrame(parent, fg_color="transparent")
-        table_container.grid(row=2, column=0, sticky="nsew", padx=25, pady=(0, 25))
+        table_container.grid(row=3, column=0, sticky="nsew", padx=25, pady=(0, 25))
         table_container.grid_columnconfigure(0, weight=1)
         table_container.grid_rowconfigure(0, weight=1)
         
         # Scrollable frame for table
-        self.table_scroll = ctk.CTkScrollableFrame(table_container, fg_color="transparent", height=450)
+        self.table_scroll = ctk.CTkScrollableFrame(table_container, fg_color="transparent", height=400)
         self.table_scroll.grid(row=0, column=0, sticky="nsew")
         self.table_scroll.grid_columnconfigure(0, weight=1)
         
@@ -380,17 +478,15 @@ class InventoryPage(ctk.CTkFrame):
         header_frame.grid(row=0, column=0, sticky="ew", pady=(0, 5))
         header_frame.grid_propagate(False)
         
-        # Set column configurations with different weights for better text visibility
+        # Set column configurations
         header_frame.grid_columnconfigure(0, weight=1, uniform="col1", minsize=80)   # Item No.
-        header_frame.grid_columnconfigure(1, weight=2, uniform="col2", minsize=150)  # Item Name (wider)
-        header_frame.grid_columnconfigure(2, weight=1, uniform="col3", minsize=80)   # Quantity
-        header_frame.grid_columnconfigure(3, weight=1, uniform="col4", minsize=60)   # Unit
-        header_frame.grid_columnconfigure(4, weight=1, uniform="col5", minsize=80)   # Price
-        header_frame.grid_columnconfigure(5, weight=1, uniform="col6", minsize=100)  # Status
-        header_frame.grid_columnconfigure(6, weight=1, uniform="col7", minsize=100)  # Last Updated
-        header_frame.grid_columnconfigure(7, weight=2, uniform="col8", minsize=180)  # Actions (wider for buttons)
+        header_frame.grid_columnconfigure(1, weight=2, uniform="col2", minsize=150)  # Item Name
+        header_frame.grid_columnconfigure(2, weight=1, uniform="col3", minsize=80)   # Image
+        header_frame.grid_columnconfigure(3, weight=1, uniform="col4", minsize=100)  # Type
+        header_frame.grid_columnconfigure(4, weight=1, uniform="col5", minsize=80)   # Unit
+        header_frame.grid_columnconfigure(5, weight=2, uniform="col6", minsize=120)  # Storage Location
         
-        headers = ["Item No.", "Item Name", "Quantity", "Unit", "Price", "Status", "Last Updated", "Actions"]
+        headers = ["Item No.", "Item Name", "Image", "Type", "Unit", "Storage Location"]
         for i, header in enumerate(headers):
             header_label = ctk.CTkLabel(
                 header_frame,
@@ -410,48 +506,38 @@ class InventoryPage(ctk.CTkFrame):
             self.create_table_row(item, i + 1)
 
     def create_table_row(self, item, row_index):
-        """Create a single table row with uniform columns and improved action buttons"""
+        """Create a single table row"""
         row_color = COLOR_WHITE if row_index % 2 == 0 else COLOR_GRAY_50
         row_frame = ctk.CTkFrame(self.table_scroll, fg_color=row_color, corner_radius=8, height=60)
         row_frame.grid(row=row_index, column=0, sticky="ew", pady=2)
         row_frame.grid_propagate(False)
         
-        # Use same column configuration as header for consistency
+        # Use same column configuration as header
         row_frame.grid_columnconfigure(0, weight=1, uniform="col1", minsize=80)   # Item No.
-        row_frame.grid_columnconfigure(1, weight=2, uniform="col2", minsize=150)  # Item Name (wider)
-        row_frame.grid_columnconfigure(2, weight=1, uniform="col3", minsize=80)   # Quantity
-        row_frame.grid_columnconfigure(3, weight=1, uniform="col4", minsize=60)   # Unit
-        row_frame.grid_columnconfigure(4, weight=1, uniform="col5", minsize=80)   # Price
-        row_frame.grid_columnconfigure(5, weight=1, uniform="col6", minsize=100)  # Status
-        row_frame.grid_columnconfigure(6, weight=1, uniform="col7", minsize=100)  # Last Updated
-        row_frame.grid_columnconfigure(7, weight=2, uniform="col8", minsize=180)  # Actions (wider for buttons)
+        row_frame.grid_columnconfigure(1, weight=2, uniform="col2", minsize=150)  # Item Name
+        row_frame.grid_columnconfigure(2, weight=1, uniform="col3", minsize=80)   # Image
+        row_frame.grid_columnconfigure(3, weight=1, uniform="col4", minsize=100)  # Type
+        row_frame.grid_columnconfigure(4, weight=1, uniform="col5", minsize=80)   # Unit
+        row_frame.grid_columnconfigure(5, weight=2, uniform="col6", minsize=120)  # Storage Location
         
         data = [
             item["item_no"],
             item["item_name"],
-            str(item["quantity"]),
+            "🖼️",  # Placeholder for image
+            item["type"],
             item["unit"],
-            f"₱{item['price']:.2f}",
-            item["status"],
-            item["last_updated"],
-            ""  # Actions column
+            item["storage_location"]
         ]
         
-        status_colors = {
-            "Good": COLOR_ACCENT_SUCCESS,
-            "Low Stock": COLOR_ACCENT_WARNING,
-            "Out of Stock": COLOR_ACCENT_ERROR
-        }
-        
-        for i, cell_data in enumerate(data[:-1]):  # Exclude actions for now
-            if i == 5:  # Status column
-                status_label = ctk.CTkLabel(
+        for i, cell_data in enumerate(data):
+            if i == 2:  # Image column
+                image_label = ctk.CTkLabel(
                     row_frame,
                     text=cell_data,
-                    font=ctk.CTkFont(weight="bold", size=12),
-                    text_color=status_colors.get(cell_data, COLOR_TEXT_PRIMARY)
+                    font=("Segoe UI", 20),
+                    text_color=COLOR_TEXT_SECONDARY
                 )
-                status_label.grid(row=0, column=i, padx=8, pady=10, sticky="nsew")
+                image_label.grid(row=0, column=i, padx=8, pady=10, sticky="nsew")
             else:
                 cell_label = ctk.CTkLabel(
                     row_frame,
@@ -461,94 +547,46 @@ class InventoryPage(ctk.CTkFrame):
                     anchor="w" if i == 1 else "center"  # Left align item names, center others
                 )
                 cell_label.grid(row=0, column=i, padx=8, pady=10, sticky="nsew")
-        
-        # Actions column with improved uniform button layout
-        actions_frame = ctk.CTkFrame(row_frame, fg_color="transparent")
-        actions_frame.grid(row=0, column=7, padx=8, pady=8, sticky="nsew")
-        
-        # Create a centered container for buttons
-        button_container = ctk.CTkFrame(actions_frame, fg_color="transparent")
-        button_container.pack(expand=True)
-        
-        # Button configuration
-        btn_width = 36
-        btn_height = 36
-        btn_spacing = 4
-        
-        # Edit button
-        edit_btn = AnimatedButton(
-            button_container,
-            text="📝",
-            font=("Segoe UI", 14),
-            fg_color=COLOR_SECONDARY,
-            hover_color=COLOR_SECONDARY_DARK,
-            text_color=COLOR_WHITE,
-            corner_radius=8,
-            width=btn_width,
-            height=btn_height,
-            border_width=0,
-            command=lambda: self.edit_item(item)
-        )
-        edit_btn.pack(side="left", padx=(0, btn_spacing))
 
-        # Delete button
-        delete_btn = AnimatedButton(
-            button_container,
-            text="🗑",
-            font=("Segoe UI", 14),
-            fg_color=COLOR_ACCENT_ERROR,
-            hover_color="#5a1f1f",
-            text_color=COLOR_WHITE,
-            corner_radius=8,
-            width=btn_width,
-            height=btn_height,
-            border_width=0,
-            command=lambda: self.delete_item(item)
-        )
-        delete_btn.pack(side="left", padx=(0, btn_spacing))
-
-        if item["quantity"] > 0:
-            minus_btn = AnimatedButton(
-                button_container,
-                text="➖",
-                font=("Segoe UI", 14),
-                fg_color=COLOR_ACCENT_WARNING,
-                hover_color="#6b5410",
-                text_color=COLOR_WHITE,
-                corner_radius=8,
-                width=btn_width,
-                height=btn_height,
-                border_width=0,
-                command=lambda: self.adjust_stock(item, -1)
+    def set_active_category(self, category):
+        """Set active category and update button styles"""
+        # Reset all buttons
+        for cat, btn in self.category_buttons.items():
+            is_active = cat == category
+            btn.configure(
+                fg_color=COLOR_PRIMARY if is_active else "transparent",
+                hover_color=COLOR_PRIMARY_HOVER if is_active else COLOR_SIDEBAR_ACTIVE,
+                text_color=COLOR_WHITE if is_active else COLOR_TEXT_SECONDARY,
+                border_width=0 if is_active else 1
             )
-            minus_btn.pack(side="left", padx=(0, btn_spacing))
-
-        plus_btn = AnimatedButton(
-            button_container,
-            text="➕",
-            font=("Segoe UI", 14),
-            fg_color=COLOR_ACCENT_SUCCESS,
-            hover_color="#1f3f1c",
-            text_color=COLOR_WHITE,
-            corner_radius=8,
-            width=btn_width,
-            height=btn_height,
-            border_width=0,
-            command=lambda: self.adjust_stock(item, 1)
-        )
-        plus_btn.pack(side="left", padx=(0, btn_spacing))
+        
+        self.active_category = category
+        self.apply_filters()
 
     def apply_filters(self):
-        """Apply search and filter to inventory data"""
+        """Apply search and filter to items data"""
         search_term = self.search_var.get().lower()
-        filter_status = self.filter_var.get()
+        filter_type = self.filter_var.get()
         
         self.filtered_data = []
         
-        for item in INVENTORY_DATA:
-            # Apply status filter
-            if filter_status != "All" and item["status"] != filter_status:
+        for item in ITEMS_DATA:
+            # Apply type filter
+            if filter_type != "All" and item["type"] != filter_type:
                 continue
+            
+            # Apply category filter from tabs
+            if self.active_category != "All":
+                if self.active_category == "Condiments and Sauces" and item["type"] != "Condiment":
+                    continue
+                elif self.active_category == "Fruits" and item["type"] != "Fruit":
+                    continue
+                elif self.active_category == "Vegetables" and item["type"] != "Vegetable":
+                    continue
+                elif self.active_category == "Staples" and item["type"] != "Staple":
+                    continue
+                elif self.active_category in ["Condiments", "Dairy"] and item["type"] != self.active_category.rstrip('s'):
+                    continue
             
             # Apply search filter
             if search_term and search_term not in item["item_name"].lower():
@@ -559,40 +597,9 @@ class InventoryPage(ctk.CTkFrame):
         # Recreate table rows
         self.create_table_rows()
 
-    def edit_item(self, item):
-        """Edit item dialog"""
-        messagebox.showinfo("Edit Item", f"Edit {item['item_name']} dialog coming soon!")
-
-    def delete_item(self, item):
-        """Delete item with confirmation"""
-        result = messagebox.askyesno("Delete Item", f"Are you sure you want to delete {item['item_name']}?")
-        if result:
-            # Remove from data
-            INVENTORY_DATA.remove(item)
-            self.apply_filters()  # Refresh table
-            messagebox.showinfo("Deleted", f"{item['item_name']} has been deleted!")
-
-    def adjust_stock(self, item, adjustment):
-        """Adjust stock quantity"""
-        new_quantity = max(0, item["quantity"] + adjustment)
-        item["quantity"] = new_quantity
-        
-        # Update status based on new quantity
-        if new_quantity == 0:
-            item["status"] = "Out of Stock"
-        elif new_quantity <= 5:  # Low stock threshold
-            item["status"] = "Low Stock"
-        else:
-            item["status"] = "Good"
-        
-        # Update last updated date
-        item["last_updated"] = datetime.now().strftime("%Y-%m-%d")
-        
-        # Refresh table
-        self.apply_filters()
-        
-        action = "Added" if adjustment > 0 else "Removed"
-        messagebox.showinfo("Stock Updated", f"{action} {abs(adjustment)} unit(s) from {item['item_name']}")
+    def add_item(self):
+        """Add new item dialog"""
+        messagebox.showinfo("Add Item", "Add new item dialog coming soon!")
 
     def show_notifications(self):
         """Show notifications dialog"""
@@ -600,13 +607,13 @@ class InventoryPage(ctk.CTkFrame):
 
     def show_user_menu(self):
         """Show user menu"""
-        messagebox.showinfo("User Menu")
+        messagebox.showinfo("User Menu", "User menu options coming soon!")
 
 
-class InventoryApp(ctk.CTk):
+class ItemsApp(ctk.CTk):
     def __init__(self):
         super().__init__()
-        self.title("StockSmart - Inventory Management")
+        self.title("StockSmart - Items Management")
         self.geometry("1200x800")
         self.minsize(1000, 700)
         self.configure(bg=COLOR_MAIN_BG)
@@ -618,15 +625,15 @@ class InventoryApp(ctk.CTk):
         self.sidebar = ModernSidebar(self)
         self.sidebar.pack(side="left", fill="y")
 
-        # Main inventory page
-        self.inventory_page = InventoryPage(self)
-        self.inventory_page.pack(side="left", fill="both", expand=True)
+        # Main items page
+        self.items_page = ItemsPage(self)
+        self.items_page.pack(side="left", fill="both", expand=True)
 
 
-# Test the inventory page with sidebar
+# Test the items page with sidebar
 if __name__ == "__main__":
     ctk.set_appearance_mode("Light")
     ctk.set_default_color_theme("blue")
     
-    app = InventoryApp()
+    app = ItemsApp()
     app.mainloop()
